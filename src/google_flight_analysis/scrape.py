@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from flight import *
+from src.google_flight_analysis.flight import *
 
 __all__ = ['Scrape', '_Scrape', 'ScrapeObjects']
 
