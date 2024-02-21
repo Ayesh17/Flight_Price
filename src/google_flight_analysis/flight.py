@@ -122,7 +122,7 @@ class Flight:
 			# num stops
 			self._num_stops = 0 if arg == 'Nonstop' else int(arg.split()[0])
 
-		elif arg.endswith('CO2') and self._co2e is None:
+		elif arg.endswith('CO2e') and self._co2 is None:
 			# co2
 			self._co2 = int(arg.split()[0])
 		elif arg.endswith('emissions') and self._emissions is None:
