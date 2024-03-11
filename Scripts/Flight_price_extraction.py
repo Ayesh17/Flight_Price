@@ -1,22 +1,18 @@
 import os
-from os.path import join
 from src.google_flight_analysis.scrape import *
-
-
-import os
 
 # Ensure the 'extracted_data' folder exists
 output_folder = os.path.join(os.getcwd(), '..', 'extracted_data')
 os.makedirs(output_folder, exist_ok=True)
 
-# Filter results we want format: origin, dest, origin_date, dest_date, ...
-result = Scrape('JFK', 'LAX', '2024-03-20', '2024-03-22')
+# Filter results we want format: dest, origin, date
+result = Scrape('JFK', 'LAX', '2024-03-15')
 
 # Process the result using ScrapeObjects
 ScrapeObjects(result)
 
 # Display the data
-print(result.data)
+# print(result.data)
 
 # Save the data to a CSV file in the 'extracted_data' folder
 base_filename = 'flight_data.csv'
