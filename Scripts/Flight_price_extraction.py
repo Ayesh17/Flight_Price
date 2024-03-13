@@ -19,7 +19,7 @@ ScrapeObjects(result)
 print(result.data)
 
 # Save the data to a CSV file in the 'extracted_data' folder
-base_filename = 'flight_data.csv'
+base_filename = 'old_flight_data.csv'
 csv_file_path = os.path.join(output_folder, base_filename)
 
 # Check if the file already exists
