@@ -7,11 +7,19 @@ from src.google_flight_analysis.scrape import *
 output_folder = os.path.join(os.getcwd(), '..', 'extracted_data')
 os.makedirs(output_folder, exist_ok=True)
 
+#Airport codes
+#JFK - New York
+#LAX - Los Angeles
+#DEN - Denver
+#ATL -Atlanta
+#DFW - Dalls
+#ORD - Chicago
+
 # Specify the origin, destination, and date range
 origin = 'LAX'
-dest = 'JFK'
-start_date = '2024-03-15'  # Adjust as needed
-end_date = '2024-06-15'  # Adjust as needed
+dest = 'ATL'
+start_date = '2024-03-17'  # Adjust as needed
+end_date = '2024-08-17'  # Adjust as needed
 
 # Gather results for each date within the range
 scraped_data = []
