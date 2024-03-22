@@ -23,6 +23,7 @@ from sklearn.svm import SVC  # You may need to choose an appropriate estimator f
 from sklearn.tree import DecisionTreeClassifier
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
 
@@ -106,6 +107,12 @@ def load_dataset(data_dir):
     column_names = combined_df.columns.tolist()
     print("Column names:", column_names)
 
+    #drop rows with incomplete data
+    combined_df.dropna(inplace=True)
+
+    #save as a csv
+    combined_df.to_csv('combined_data.csv', index=False)
+
     #get the dataset and labels
     dataset = combined_df.drop(columns=['Price ($)'])
     labels = combined_df['Price ($)']
@@ -128,70 +135,47 @@ def create_model(input_shape):
     return model
 
 
-
-def train_model(model, X_train, y_train, X_val, y_val,  epochs):
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    highest_accuracy = 0.0
+def train_model(model, X_train, y_train, X_val, y_val, epochs):
+    model.compile(loss='mean_squared_error', optimizer='adam')  # Using mean squared error as loss for regression
+    lowest_val_loss = float('inf')  # Initialize with a large value
     best_weights = None
+
     for epoch in range(epochs):
         history = model.fit(X_train, y_train, epochs=1, verbose=0)
 
-        # Calculate training accuracy and loss
-        train_accuracy = model.evaluate(X_train, y_train, verbose=0)[1]
-        train_loss = model.evaluate(X_train, y_train, verbose=0)[0]
+        # Calculate training predictions
+        y_train_pred = model.predict(X_train)
+        train_mae = mean_absolute_error(y_train, y_train_pred)
+        train_mse = mean_squared_error(y_train, y_train_pred)
 
-        # Calculate validation accuracy and loss
-        val_accuracy = model.evaluate(X_val, y_val, verbose=0)[1]
-        val_loss = model.evaluate(X_val, y_val, verbose=0)[0]
+        # Calculate validation predictions
+        y_val_pred = model.predict(X_val)
+        val_mae = mean_absolute_error(y_val, y_val_pred)
+        val_mse = mean_squared_error(y_val, y_val_pred)
 
-        print(f'Epoch {epoch + 1}/{epochs} - Training loss: {train_loss:.4f} - Training accuracy: {train_accuracy:.4f} - Validation loss: {val_loss:.4f} - Validation accuracy: {val_accuracy:.4f}')
+        print(
+            f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
 
-        if val_accuracy > highest_accuracy:
-            highest_accuracy = val_accuracy
+        # Calculate validation loss
+        val_loss = model.evaluate(X_val, y_val, verbose=0)
+
+        if val_loss < lowest_val_loss:
+            lowest_val_loss = val_loss
             best_weights = model.get_weights()
+
     model.set_weights(best_weights)
 
 
-# def evaluate_model(model, X_test, y_test):
-#
-#     # Confusion matrix
-#     y_pred = model.predict(X_test)
-#     y_pred_classes = np.argmax(y_pred, axis=1)
-#     y_true_classes = np.argmax(y_test, axis=1)
-#     print('Confusion matrix:')
-#     cm = confusion_matrix(y_true_classes, y_pred_classes)
-#     print(cm)
-#     # make_pdf_of_confusion_matrix(cm)
-#
-#     accuracy = model.evaluate(X_test, y_test, verbose=0)[1]
-#     print('Accuracy:', accuracy)
-#
-#     # Each class evaluation
-#     precision = precision_score(y_true_classes, y_pred_classes, average='macro')
-#     recall = recall_score(y_true_classes, y_pred_classes, average='macro')
-#     f1 = f1_score(y_true_classes, y_pred_classes, average='macro')
-#
-#     # specificity = cm[0, 0] / (cm[0, 0] + cm[0, 1])  # True Negative Rate
-#
-#     print()
-#     print("Macro Evaluation Results")
-#     print('Precision:', precision)
-#     print('Recall:', recall)
-#     # print('Specificity:', specificity)
-#     print('F1-score:', f1)
-#
-#
-#     # Overall Evaluation using average = None
-#     precision = precision_score(y_true_classes, y_pred_classes, average=None)
-#     recall = recall_score(y_true_classes, y_pred_classes, average=None)
-#     f1 = f1_score(y_true_classes, y_pred_classes, average=None)
-#
-#     print()
-#     print("Average = None Evaluation Results")
-#     print('Precision:', precision)
-#     print('Recall:', recall)
-#     # print('Specificity:', specificity)
-#     print('F1-score:', f1)
+def evaluate_model(model, X_test, y_test):
+    # Compute predictions
+    y_pred = model.predict(X_test)
+
+    # Compute MAE and MSE
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+
+    print('Mean Absolute Error (MAE):', mae)
+    print('Mean Squared Error (MSE):', mse)
 
 
 def main():
@@ -230,9 +214,9 @@ def main():
     # Train the model
     train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
-    #
-    # # Evaluate the model
-    # evaluate_model(model, X_test, y_test)
+
+    # Evaluate the model
+    evaluate_model(model, X_test, y_test)
 
 
 if __name__ == '__main__':
