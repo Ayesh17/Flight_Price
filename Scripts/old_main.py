@@ -57,13 +57,65 @@ def load_dataset(data_dir):
     combined_df = pd.concat(dfs, ignore_index=True)
     print("combined_df", combined_df.head())
 
+    # combined_df['Access Date'] = pd.to_datetime(combined_df['Access Date'])
+    # combined_df['Departure datetime'] = pd.to_datetime(combined_df['Departure datetime'])
+    # combined_df['Arrival datetime'] = pd.to_datetime(combined_df['Arrival datetime'])
+    #
+    # # Get the overall time of the flight
+    # combined_df['Time to Travel'] = (combined_df['Arrival datetime'] - combined_df[
+    #     'Departure datetime']).dt.total_seconds() / 3600
+    # combined_df['Time to Travel'] = combined_df['Time to Travel'].round(2) # Round the time to travel to two decimal points
+    #
+    #
+    # # Get the time difference from access date to travel date
+    # # Calculate the difference in days between 'Access Date' and 'Departure Date'
+    # # Extract date part from 'Departure datetime' column
+    # combined_df['Departure Date'] = combined_df['Departure datetime'].dt.date
+    # combined_df['Departure Date'] = pd.to_datetime(combined_df['Departure Date'], errors='coerce')
+    # combined_df['Access-Departure Days'] = (combined_df['Departure Date'] - combined_df['Access Date']).dt.days
+    #
+    #
+    # # Extract date of the year (day of the year) and hour components
+    # # combined_df['Travel Year'] = combined_df['Departure datetime'].dt.year
+    # combined_df['Travel Day of Year'] = combined_df['Departure datetime'].dt.dayofyear
+    # combined_df['Travel Hour'] = combined_df['Departure datetime'].dt.hour
+    # combined_df['Access Day of Year'] = combined_df['Departure datetime'].dt.dayofyear
+    #
+    # # Drop instances where airline is wrong
+    # # Define a regular expression pattern to match non-letter characters or spaces
+    # pattern = r'[^a-zA-Z ]'
+    # # Filter the DataFrame to keep only rows where 'Airlines' column doesn't contain the pattern
+    # combined_df = combined_df[~combined_df['Airline(s)'].str.contains(pattern)]
+    #
+    # # Drop the original 'Arrival datetime' and 'Departure datetime' columns
+    # combined_df.drop(columns=['Arrival datetime'], inplace=True)
+    # combined_df.drop(columns=['Departure datetime'], inplace=True)
+    # combined_df.drop(columns=['Departure Date'], inplace=True)
+    # combined_df.drop(columns=['Access Date'], inplace=True)
+    # combined_df.drop(columns=['Travel Time'], inplace=True)
+    # combined_df.drop(columns=['Layover'], inplace=True)
+    # combined_df.drop(columns=['Airline(s)'], inplace=True)
+    # combined_df.drop(columns=['CO2 Emission (kg)'], inplace=True)
+    # combined_df.drop(columns=['Emission Diff (%)'], inplace=True)
+    #
+    # #convert non numerical values to numerical
+    # # Initialize LabelEncoder
+    # label_encoder = LabelEncoder()
+    #
+    # combined_df['Origin'] = label_encoder.fit_transform(combined_df['Origin'])
+    # combined_df['Destination'] = label_encoder.fit_transform(combined_df['Destination'])
+    #
+    # print("combined_df", combined_df.head())
+    #
     column_names = combined_df.columns.tolist()
     print("Column names:", column_names)
-
-
+    #
+    # #drop rows with incomplete data
+    # combined_df.dropna(inplace=True)
+    #
     #save as a csv
     combined_df.to_csv('combined_data.csv', index=False)
-
+    #
     #get the dataset and labels
     dataset = combined_df.drop(columns=['Price ($)'])
     labels = combined_df['Price ($)']
