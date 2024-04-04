@@ -10,10 +10,11 @@ output_folder = os.path.join(os.getcwd(), '..', 'extracted_data')
 os.makedirs(output_folder, exist_ok=True)
 
 # Filter results we want format: origin, dest, origin_date, dest_date, ...
-result = Scrape('JFK', 'LAX', '2024-03-20', '2024-03-22')
+result = Scrape('JFK', 'LAX', '2024-03-20', '2025-03-22')
 
 # Process the result using ScrapeObjects
 ScrapeObjects(result)
+
 
 # Display the data
 print(result.data)
