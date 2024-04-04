@@ -5,6 +5,8 @@ from src.google_flight_analysis.scrape import *
 
 import os
 
+
+
 # Ensure the 'extracted_data' folder exists
 output_folder = os.path.join(os.getcwd(), '..', 'extracted_data')
 os.makedirs(output_folder, exist_ok=True)
