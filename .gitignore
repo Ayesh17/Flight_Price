@@ -1,4 +1,4 @@
-*.csv
+#*.csv
 
-Extracted_data/*
+#Extracted_data/*
 
