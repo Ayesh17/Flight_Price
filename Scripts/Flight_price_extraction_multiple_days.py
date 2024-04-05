@@ -1,4 +1,6 @@
 import os
+import time
+
 import pandas as pd
 
 from src.google_flight_analysis.scrape import *
@@ -18,20 +20,35 @@ os.makedirs(output_folder, exist_ok=True)
 # Specify the origin, destination, and date range
 origin = 'LAX'
 dest = 'ATL'
-start_date = '2024-03-17'  # Adjust as needed
-end_date = '2024-08-17'  # Adjust as needed
+start_date = '2024-04-17'  # Adjust as needed
+end_date = '2024-04-30'  # Adjust as needed
+
+
+# Set the number of retry attempts
+max_retries = 10
 
 # Gather results for each date within the range
 scraped_data = []
 for date in pd.date_range(start=start_date, end=end_date):
     print("Extracting data for flight on:", date)
 
-    try:
-        result = Scrape(dest, origin, date.strftime("%Y-%m-%d"))  # Format date as required by Scrape
-        ScrapeObjects(result)
-        scraped_data.append(result.data)
-    except ValueError as e:
-        print(f"Error for date {date}: {e}")
+    retries = 0
+    while retries < max_retries:
+        try:
+            # Extract only the date part using strftime
+            formatted_date = date.strftime("%Y-%m-%d")
+            result = Scrape(dest, origin, formatted_date)
+            # Call ScrapeObjects directly to avoid creating unnecessary objects
+            ScrapeObjects(result)
+            scraped_data.append(result.data)
+            break  # Break out of the retry loop if scraping succeeds
+        except ValueError as e:
+            retries += 1
+            print(f"Error scraping data for {date}. Retry {retries}/{max_retries}. Error: {e}")
+            if retries == max_retries:
+                print(f"Max retries reached for {date}. Skipping to the next date.")
+                break  # Move to the next date if max retries reached
+            time.sleep(1)  # Add a small delay between retries
 
 # Combine results into a single DataFrame
 combined_data = pd.concat(scraped_data)
