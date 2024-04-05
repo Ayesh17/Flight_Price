@@ -24,6 +24,7 @@ from sklearn.tree import DecisionTreeClassifier
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+import LSTM_model
 
 
 # Folder structure
@@ -40,7 +41,6 @@ def load_dataset(data_dir):
     current_directory = os.getcwd()
     base_directory = os.path.dirname(current_directory)
     input_directory = os.path.join(base_directory, data_dir)
-    # print("input_directory", input_directory)
 
     # List to store DataFrames
     dfs = []
@@ -49,22 +49,23 @@ def load_dataset(data_dir):
     for file_name in os.listdir(input_directory):
         if file_name.endswith(".csv"):  # Check if the file is a CSV file
             file_path = os.path.join(input_directory, file_name)  # Construct the file path
-            # print("file_path", file_path)
             df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
             dfs.append(df)  # Append the DataFrame to the list
 
-    # Concatenate all DataFrames into a single DataFrame
-    combined_df = pd.concat(dfs, ignore_index=True)
+    # # Concatenate all DataFrames into a single DataFrame
+    # combined_df = pd.concat(dfs, ignore_index=True)
+
+    # Concatenate all DataFrames into a single DataFrame based on 'travel_date' column
+    combined_df = pd.concat(dfs, ignore_index=True).sort_values(by='Travel Day of Year')
+
     print("combined_df", combined_df.head())
 
     column_names = combined_df.columns.tolist()
-    print("Column names:", column_names)
 
-
-    #save as a csv
+    # Save as a CSV
     combined_df.to_csv('combined_data.csv', index=False)
 
-    #get the dataset and labels
+    # Get the dataset and labels
     dataset = combined_df.drop(columns=['Price ($)'])
     labels = combined_df['Price ($)']
 
@@ -162,7 +163,9 @@ def main():
 
     input_shape = (len(X_train), X_train.shape[1],)   # Shape of input data for LSTM model
     print(input_shape)
-    model = create_model(input_shape)
+
+    #Updae this based on the model we use
+    model = LSTM_model.create_model(input_shape)
 
     # Train the model
     train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=1000)
