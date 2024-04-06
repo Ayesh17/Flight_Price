@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from src.google_flight_analysis.scrape import *
+from Flight_Price.src.google_flight_analysis.scrape import *
 
 # Ensure the 'extracted_data' folder exists
 output_folder = os.path.join(os.getcwd(), '..', 'extracted_data')
@@ -18,7 +18,7 @@ os.makedirs(output_folder, exist_ok=True)
 # Specify the origin, destination, and date range
 origin = 'LAX'
 dest = 'ATL'
-start_date = '2024-03-17'  # Adjust as needed
+start_date = '2024-04-05'  # Adjust as needed
 end_date = '2024-08-17'  # Adjust as needed
 
 # Gather results for each date within the range
