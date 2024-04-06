@@ -18,10 +18,10 @@ os.makedirs(output_folder, exist_ok=True)
 #ORD - Chicago
 
 # Specify the origin, destination, and date range
-origin = 'LAX'
+origin = 'JFK'
 dest = 'ATL'
 start_date = '2024-04-17'  # Adjust as needed
-end_date = '2024-04-30'  # Adjust as needed
+end_date = '2024-09-17'  # Adjust as needed
 
 
 # Set the number of retry attempts
