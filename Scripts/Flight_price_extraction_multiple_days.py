@@ -9,28 +9,28 @@ from Flight_Price.src.google_flight_analysis.scrape import *
 output_folder = os.path.join(os.getcwd(), '..', 'extracted_data')
 os.makedirs(output_folder, exist_ok=True)
 
-#Airport codes
-#JFK - New York
-#LAX - Los Angeles
-#DEN - Denver
-#ATL -Atlanta
-#DFW - Dalls
-#ORD - Chicago
+# Airport codes
+# JFK - New York
+# LAX - Los Angeles
+# DEN - Denver
+# ATL -Atlanta
+# DFW - Dalls
+# ORD - Chicago
 
 # Specify the origin, destination, and date range
-origin = 'JFK'
-dest = 'ATL'
+# origin = 'JFK'
+# dest = 'ATL'
+origin = 'DEN'
+dest = 'DFW'
 
-start_date = '2024-04-05'  # Adjust as needed
-end_date = '2024-08-17'  # Adjust as needed
+# start_date = '2024-04-05'  # Adjust as needed
+# end_date = '2024-08-17'  # Adjust as needed
 
 start_date = '2024-04-17'  # Adjust as needed
 end_date = '2024-09-17'  # Adjust as needed
 
-
 # Set the number of retry attempts
 max_retries = 10
-
 
 # Gather results for each date within the range
 scraped_data = []
@@ -53,7 +53,7 @@ for date in pd.date_range(start=start_date, end=end_date):
             if retries == max_retries:
                 print(f"Max retries reached for {date}. Skipping to the next date.")
                 break  # Move to the next date if max retries reached
-            time.sleep(1)  # Add a small delay between retries
+            time.sleep(2)  # Add a small delay between retries
 
 # Combine results into a single DataFrame
 combined_data = pd.concat(scraped_data)
