@@ -19,7 +19,7 @@ os.makedirs(output_folder, exist_ok=True)
 
 # Specify the origin, destination, and date range
 origin = 'LAX'
-dest = 'ATL'
+dest = 'DFW'
 start_date = '2024-04-17'  # Adjust as needed
 end_date = '2024-09-17'  # Adjust as needed
 

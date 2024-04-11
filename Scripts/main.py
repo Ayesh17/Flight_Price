@@ -26,15 +26,14 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import LSTM_model
 
-
 # Folder structure
 data_dir = 'Preprocessed_data'
-
 
 # Set random seeds for reproducibility
 random.seed(42)
 np.random.seed(42)
 tf.random.set_seed(42)
+
 
 def load_dataset(data_dir):
     # Get the current working directory
@@ -134,13 +133,11 @@ def main():
     # Load the dataset
     dataset, labels = load_dataset(data_dir)
 
-
     X_train, X_val, y_train, y_val = train_test_split(dataset, labels, test_size=0.2, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.50, random_state=42)
     print("X_train", len(X_train))
     print("X_val", len(X_val))
     print("X_test", len(X_test))
-
 
     # # Convert labels to categorical format
     # num_classes = 3  # Number of classes
@@ -161,15 +158,14 @@ def main():
     print("X_val shape after reshaping:", X_val_reshaped.shape)
     print("X_test shape after reshaping:", X_test_reshaped.shape)
 
-    input_shape = (len(X_train), X_train.shape[1],)   # Shape of input data for LSTM model
+    input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
     print(input_shape)
 
-    #Updae this based on the model we use
+    # Updae this based on the model we use
     model = LSTM_model.create_model(input_shape)
 
     # Train the model
     train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=1000)
-
 
     # Evaluate the model
     evaluate_model(model, X_test_reshaped, y_test)
@@ -177,4 +173,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

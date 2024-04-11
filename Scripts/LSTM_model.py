@@ -6,6 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 
+
 def create_model(input_shape):
     model = Sequential()
     model.add(Input(shape=input_shape))
