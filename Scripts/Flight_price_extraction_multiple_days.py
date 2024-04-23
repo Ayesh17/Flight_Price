@@ -20,14 +20,14 @@ os.makedirs(output_folder, exist_ok=True)
 # Specify the origin, destination, and date range
 # origin = 'JFK'
 # dest = 'ATL'
-origin = 'DEN'
-dest = 'DFW'
+origin = 'JFK'
+dest = 'LAX'
 
 # start_date = '2024-04-05'  # Adjust as needed
 # end_date = '2024-08-17'  # Adjust as needed
 
-start_date = '2024-04-17'  # Adjust as needed
-end_date = '2024-09-17'  # Adjust as needed
+start_date = '2024-04-25'  # Adjust as needed
+end_date = '2024-11-25'  # Adjust as needed
 
 # Set the number of retry attempts
 max_retries = 10
