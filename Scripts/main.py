@@ -7,26 +7,8 @@ from random import random
 
 import numpy as np
 import pandas as pd
-import pickle
-
-from keras import Input
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import SelectPercentile, f_classif, RFE
-from sklearn.model_selection import train_test_split
-from keras.models import Sequential
-from keras.layers import Bidirectional, LSTM, Dense, Dropout, SimpleRNN, GRU
-from keras.utils import to_categorical
-from sklearn.metrics import confusion_matrix
 import random
 import tensorflow as tf
-import keras
-from keras.callbacks import TensorBoard, EarlyStopping
-from sklearn.metrics import precision_score, recall_score, f1_score
-from sklearn.feature_selection import RFECV
-from sklearn.svm import SVC  # You may need to choose an appropriate estimator for your problem
-from sklearn.tree import DecisionTreeClassifier
-from datetime import datetime
-from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
 
@@ -126,6 +108,29 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
 
 
 def evaluate_model(model, X_test, y_test):
+
+    # [Short(below 800)]
+    # JFK -> ATL(759)
+    # JFK -> ORD(738)
+    # ATL -> ORD(606)
+    # ATL -> DFW(739)
+    # DEN -> DFW(662)
+    #
+    # [Medium(800~1250)]
+    # LAX -> DEN(860)
+    # DEN -> ORD(806)
+    # ORD -> DFW(801)
+    # LAX -> DFW(1232)
+    # ATL -> DEN(1196)
+    #
+    # [Long(over 1250)]
+    # JFK -> LAX(2469)
+    # JFK -> DFW(1388)
+    # LAX -> DFW(1232)
+    # LAX -> ORD(1741)
+    # LAX -> ATL(1946)
+
+
     # Compute predictions
     y_pred = model.predict(X_test)
 
@@ -152,7 +157,6 @@ def evaluate_model(model, X_test, y_test):
 
 def main():
     # Load the dataset
-    print("window")
     datasets, labels = load_dataset(data_dir)
 
     for i in range(len(datasets)):
