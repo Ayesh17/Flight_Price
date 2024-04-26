@@ -18,8 +18,8 @@ os.makedirs(output_folder, exist_ok=True)
 #ORD - Chicago
 
 # Specify the origin, destination, and date range
-origin = 'LAX'
-dest = 'ORD'
+origin = 'ATL'
+dest = 'LAX'
 start_date = '2024-04-25'  # Adjust as needed
 end_date = '2024-11-25'  # Adjust as needed
 

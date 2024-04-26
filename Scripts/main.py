@@ -1,3 +1,7 @@
+import numpy as np
+from sklearn.model_selection import train_test_split
+
+
 import os
 from random import random
 
@@ -24,7 +28,7 @@ from sklearn.tree import DecisionTreeClassifier
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-import LSTM_model
+from LSTM_model import LSTM_model
 
 # Folder structure
 data_dir = 'Preprocessed_data'
@@ -51,39 +55,43 @@ def load_dataset(data_dir):
             df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
             dfs.append(df)  # Append the DataFrame to the list
 
-    # # Concatenate all DataFrames into a single DataFrame
-    # combined_df = pd.concat(dfs, ignore_index=True)
-
-    # Concatenate all DataFrames into a single DataFrame based on 'travel_date' column
+    # Concatenate all DataFrames into a single DataFrame
     combined_df = pd.concat(dfs, ignore_index=True).sort_values(by='Travel Day of Year')
 
-    print("combined_df", combined_df.head())
+    # Sort the DataFrame by 'Travel Day of Year' and 'Travel Hour'
+    combined_df = combined_df.sort_values(by=['Travel Day of Year', 'Travel Hour'])
 
-    column_names = combined_df.columns.tolist()
+    # Define the window size in terms of months
+    window_size_months = 4
 
-    # Save as a CSV
-    combined_df.to_csv('combined_data.csv', index=False)
+    # Get the minimum and maximum flight months
+    min_flight_month = combined_df['Travel Month'].min()
+    max_flight_month = combined_df['Travel Month'].max()
 
-    # Get the dataset and labels
-    dataset = combined_df.drop(columns=['Price ($)'])
-    labels = combined_df['Price ($)']
+    # List to store windowed datasets and labels
+    windowed_datasets = []
+    windowed_labels = []
 
-    print("dataset", dataset.shape)
-    print("labels", labels.shape)
+    # Iterate over the flight months
+    start_month = min_flight_month
+    while start_month + window_size_months -1 <= max_flight_month:
+        end_month = start_month + window_size_months
 
-    return dataset, labels
+        # Filter data for the current window
+        window_data = combined_df[(combined_df['Travel Month'] >= start_month) & (combined_df['Travel Month'] < end_month)]
 
+        # Extract features and labels
+        window_dataset = window_data.drop(columns=['Price ($)'])
+        window_labels = window_data['Price ($)']
 
-def create_model(input_shape):
-    model = Sequential()
-    model.add(Input(shape=input_shape))
-    model.add(LSTM(128, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(64))
-    model.add(Dropout(0.2))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(1))
-    return model
+        # Append to the list
+        windowed_datasets.append(window_dataset)
+        windowed_labels.append(window_labels)
+
+        # Move to the next window
+        start_month += 1
+
+    return windowed_datasets, windowed_labels
 
 
 def train_model(model, X_train, y_train, X_val, y_val, epochs):
@@ -129,47 +137,61 @@ def evaluate_model(model, X_test, y_test):
     print('Mean Squared Error (MSE):', mse)
 
 
+# def generate_rolling_windows(dataset, labels, window_size=120, train_ratio=0.7, val_ratio=0.15):
+#     num_windows = len(dataset) - window_size + 1
+#     windows = []
+#     for i in range(num_windows):
+#         window_data = dataset[i:i + window_size]
+#         window_labels = labels[i:i + window_size]
+#         X_train, X_temp, y_train, y_temp = train_test_split(window_data, window_labels, train_size=train_ratio)
+#         X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5)
+#         windows.append((X_train, X_val, X_test, y_train, y_val, y_test))
+#     return windows
+
+
+
 def main():
     # Load the dataset
-    dataset, labels = load_dataset(data_dir)
+    print("window")
+    datasets, labels = load_dataset(data_dir)
 
-    X_train, X_val, y_train, y_val = train_test_split(dataset, labels, test_size=0.2, random_state=42)
-    X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.50, random_state=42)
-    print("X_train", len(X_train))
-    print("X_val", len(X_val))
-    print("X_test", len(X_test))
+    for i in range(len(datasets)):
+        unique_values = datasets[i]['Travel Month'].unique()
+        print("unique_values", unique_values)
 
-    # # Convert labels to categorical format
-    # num_classes = 3  # Number of classes
-    # y_train = to_categorical(y_train, num_classes)
-    # y_val = to_categorical(y_val, num_classes)
-    # y_test = to_categorical(y_test, num_classes)
-    #
-    # Create the model
-    print("X_train shape:", X_train.shape[1])
+    print(len(datasets))
+    print(datasets[0].head())
+    print(datasets[0].tail())
 
-    # Reshape X_train and X_val to add the timestep dimension
-    X_train_reshaped = np.expand_dims(X_train, axis=1)
-    X_val_reshaped = np.expand_dims(X_val, axis=1)
-    X_test_reshaped = np.expand_dims(X_test, axis=1)
+    for i in range(len(datasets)):
+        # Split the windowed data into train, validation, and test sets (80-10-10 split)
+        data = datasets[i]
+        label = labels[i]
+        train_size = int(0.8 * len(data))
+        val_size = int(0.1 * len(data))
 
-    # Print the shapes to verify
-    print("X_train shape after reshaping:", X_train_reshaped.shape)
-    print("X_val shape after reshaping:", X_val_reshaped.shape)
-    print("X_test shape after reshaping:", X_test_reshaped.shape)
+        X_train = data[:train_size]
+        y_train = label[:train_size]
 
-    input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
-    print(input_shape)
+        X_val = data[train_size:train_size + val_size]
+        y_val = label[train_size:train_size + val_size]
 
-    # Updae this based on the model we use
-    model = LSTM_model.create_model(input_shape)
+        X_test = data[train_size + val_size:]
+        y_test = label[train_size + val_size:]
 
-    # Train the model
-    train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=1000)
+        # Model Preparation
+        input_shape = (X_train.shape[1],)  # Shape of input data for LSTM model
 
-    # Evaluate the model
-    evaluate_model(model, X_test_reshaped, y_test)
+
+
+        # Train the model
+        model = LSTM_model(input_shape)
+        train_model(model, X_train, y_train, X_val, y_val, epochs=2)
+
+        # Evaluate the model
+        evaluate_model(model, X_test, y_test)
 
 
 if __name__ == '__main__':
     main()
+
