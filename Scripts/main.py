@@ -180,16 +180,25 @@ def main():
         y_test = label[train_size + val_size:]
 
         # Model Preparation
-        input_shape = (X_train.shape[1],)  # Shape of input data for LSTM model
 
+        # Reshape X_train and X_val to add the timestep dimension
+        X_train_reshaped = np.expand_dims(X_train, axis=1)
+        X_val_reshaped = np.expand_dims(X_val, axis=1)
+        X_test_reshaped = np.expand_dims(X_test, axis=1)
 
+        # Print the shapes to verify
+        print("X_train shape after reshaping:", X_train_reshaped.shape)
+        print("X_val shape after reshaping:", X_val_reshaped.shape)
+        print("X_test shape after reshaping:", X_test_reshaped.shape)
+
+        input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
 
         # Train the model
         model = LSTM_model(input_shape)
-        train_model(model, X_train, y_train, X_val, y_val, epochs=2)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
         # Evaluate the model
-        evaluate_model(model, X_test, y_test)
+        evaluate_model(model, X_test_reshaped, y_test)
 
 
 if __name__ == '__main__':
