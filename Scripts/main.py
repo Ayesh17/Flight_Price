@@ -109,26 +109,7 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
 
 def evaluate_model(model, X_test, y_test):
 
-    # [Short(below 800)]
-    # JFK -> ATL(759)
-    # JFK -> ORD(738)
-    # ATL -> ORD(606)
-    # ATL -> DFW(739)
-    # DEN -> DFW(662)
-    #
-    # [Medium(800~1250)]
-    # LAX -> DEN(860)
-    # DEN -> ORD(806)
-    # ORD -> DFW(801)
-    # LAX -> DFW(1232)
-    # ATL -> DEN(1196)
-    #
-    # [Long(over 1250)]
-    # JFK -> LAX(2469)
-    # JFK -> DFW(1388)
-    # LAX -> DFW(1232)
-    # LAX -> ORD(1741)
-    # LAX -> ATL(1946)
+
 
 
     # Compute predictions
@@ -153,6 +134,108 @@ def evaluate_model(model, X_test, y_test):
 #         windows.append((X_train, X_val, X_test, y_train, y_val, y_test))
 #     return windows
 
+def data_split(X_test, y_test):
+    # [Short(below 800)]
+    # JFK -> ATL(759)
+    # JFK -> ORD(738)
+    # ATL -> ORD(606)
+    # ATL -> DFW(739)
+    # DEN -> DFW(662)
+    #
+    # [Medium(800~1250)]
+    # LAX -> DEN(860)
+    # DEN -> ORD(806)
+    # ORD -> DFW(801)
+    # LAX -> DFW(1232)
+    # ATL -> DEN(1196)
+    #
+    # [Long(over 1250)]
+    # JFK -> LAX(2469)
+    # JFK -> DFW(1388)
+    # LAX -> DFW(1232)
+    # LAX -> ORD(1741)
+    # LAX -> ATL(1946)
+
+    # 'JFK': 0, 'LAX': 1, 'DEN': 2, 'ATL': 3, 'DFW': 4, 'ORD': 5
+
+
+    # Initialize empty DataFrames for each category
+    short_distance_X = pd.DataFrame(columns=X_test.columns)
+    short_distance_y = pd.Series()
+    medium_distance_X = pd.DataFrame(columns=X_test.columns)
+    medium_distance_y = pd.Series()
+    long_distance_X = pd.DataFrame(columns=X_test.columns)
+    long_distance_y = pd.Series()
+
+    # Boolean indexing for short distance
+    short_distance_conditions = (
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 4) |
+
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 2)
+    )
+    short_distance_X = X_test[short_distance_conditions]
+    short_distance_y = y_test[short_distance_conditions]
+
+    # Boolean indexing for medium distance
+    medium_distance_conditions = (
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 2) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 2) |
+
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 2) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 3)
+    )
+    medium_distance_X = X_test[medium_distance_conditions]
+    medium_distance_y = y_test[medium_distance_conditions]
+
+    # Boolean indexing for long distance
+    long_distance_conditions = (
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 3) |
+
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 1)
+    )
+    long_distance_X = X_test[long_distance_conditions]
+    long_distance_y = y_test[long_distance_conditions]
+
+    # Display the resulting DataFrames
+    # print("Short Distance:")
+    # print(short_distance_X)
+    # print(short_distance_y)
+    #
+    # print("\nMedium Distance:")
+    # print(medium_distance_X)
+    # print(medium_distance_y)
+    #
+    # print("\nLong Distance:")
+    # print(long_distance_X)
+    # print(long_distance_y)
+
+    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X]
+    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y]
+
+
+    return X_test_dist, y_test_dist
 
 
 def main():
@@ -183,6 +266,8 @@ def main():
         X_test = data[train_size + val_size:]
         y_test = label[train_size + val_size:]
 
+        X_test_dist, y_test_dist = data_split(X_test, y_test)
+
         # Model Preparation
 
         # Reshape X_train and X_val to add the timestep dimension
@@ -199,10 +284,16 @@ def main():
 
         # Train the model
         model = LSTM_model(input_shape)
-        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=2)
 
-        # Evaluate the model
-        evaluate_model(model, X_test_reshaped, y_test)
+        print("Evaluation")
+        for i in range(len(X_test_dist)):
+            X_test = X_test_dist[i]
+            y_test = y_test_dist[i]
+            X_test_reshaped = np.expand_dims(X_test, axis=1)
+
+            # Evaluate the model
+            evaluate_model(model, X_test_reshaped, y_test)
 
 
 if __name__ == '__main__':
