@@ -43,6 +43,9 @@ def load_dataset(data_dir):
     # Sort the DataFrame by 'Travel Day of Year' and 'Travel Hour'
     combined_df = combined_df.sort_values(by=['Travel Day of Year', 'Travel Hour'])
 
+    # Save as a CSV
+    # combined_df.to_csv('combined_data.csv', index=False)
+
     # Define the window size in terms of months
     window_size_months = 4
 
@@ -94,8 +97,7 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
         val_mae = mean_absolute_error(y_val, y_val_pred)
         val_mse = mean_squared_error(y_val, y_val_pred)
 
-        print(
-            f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
+        print(f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
 
         # Calculate validation loss
         val_loss = model.evaluate(X_val, y_val, verbose=0)
@@ -109,9 +111,6 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
 
 def evaluate_model(model, X_test, y_test):
 
-
-
-
     # Compute predictions
     y_pred = model.predict(X_test)
 
@@ -119,20 +118,9 @@ def evaluate_model(model, X_test, y_test):
     mae = mean_absolute_error(y_test, y_pred)
     mse = mean_squared_error(y_test, y_pred)
 
-    print('Mean Absolute Error (MAE):', mae)
-    print('Mean Squared Error (MSE):', mse)
+    print(f"Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
 
-
-# def generate_rolling_windows(dataset, labels, window_size=120, train_ratio=0.7, val_ratio=0.15):
-#     num_windows = len(dataset) - window_size + 1
-#     windows = []
-#     for i in range(num_windows):
-#         window_data = dataset[i:i + window_size]
-#         window_labels = labels[i:i + window_size]
-#         X_train, X_temp, y_train, y_temp = train_test_split(window_data, window_labels, train_size=train_ratio)
-#         X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5)
-#         windows.append((X_train, X_val, X_test, y_train, y_val, y_test))
-#     return windows
+    return mae, mse
 
 def data_split(X_test, y_test):
     # [Short(below 800)]
@@ -218,18 +206,21 @@ def data_split(X_test, y_test):
     long_distance_X = X_test[long_distance_conditions]
     long_distance_y = y_test[long_distance_conditions]
 
+
+    pd.set_option('display.max_columns', None)
+
     # Display the resulting DataFrames
     # print("Short Distance:")
-    # print(short_distance_X)
-    # print(short_distance_y)
+    # print(short_distance_X.head())
+    # print(short_distance_y.head())
     #
     # print("\nMedium Distance:")
-    # print(medium_distance_X)
-    # print(medium_distance_y)
+    # print(medium_distance_X.head())
+    # print(medium_distance_y.head())
     #
     # print("\nLong Distance:")
-    # print(long_distance_X)
-    # print(long_distance_y)
+    # print(long_distance_X.head())
+    # print(long_distance_y.head())
 
     X_test_dist = [short_distance_X, medium_distance_X, long_distance_X]
     y_test_dist = [short_distance_y, medium_distance_y, long_distance_y]
@@ -244,13 +235,18 @@ def main():
 
     for i in range(len(datasets)):
         unique_values = datasets[i]['Travel Month'].unique()
-        print("unique_values", unique_values)
+        # print("unique_values", unique_values)
 
-    print(len(datasets))
+    # print(len(datasets))
     print(datasets[0].head())
-    print(datasets[0].tail())
+
+    mae_list = []
+    mse_list = []
+    distance_type = ["Short Distance", "Medium Distance", "Long Distance"]
 
     for i in range(len(datasets)):
+        print("\nWindow : ", i+1)
+
         # Split the windowed data into train, validation, and test sets (80-10-10 split)
         data = datasets[i]
         label = labels[i]
@@ -284,17 +280,26 @@ def main():
 
         # Train the model
         model = LSTM_model(input_shape)
-        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=2)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
-        print("Evaluation")
+
         for i in range(len(X_test_dist)):
             X_test = X_test_dist[i]
             y_test = y_test_dist[i]
             X_test_reshaped = np.expand_dims(X_test, axis=1)
 
             # Evaluate the model
-            evaluate_model(model, X_test_reshaped, y_test)
+            print(distance_type[i])
+            mae, mse = evaluate_model(model, X_test_reshaped, y_test)
 
+            mae_list.append(mae)
+            mse_list.append(mse)
+
+    print("\n\nEvaluation results")
+    for i in range(len(datasets)):
+        print()
+        for j in range(3): #for short, medium, long
+            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[i+j]:.2f} \tMSE: {mse_list[i+j]:.2f}")
 
 if __name__ == '__main__':
     main()

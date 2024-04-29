@@ -37,7 +37,7 @@ for file_name in os.listdir(input_folder):
         df['Travel Month'] = df['Departure datetime'].dt.month
         df['Travel Day of Year'] = df['Departure datetime'].dt.dayofyear
         df['Travel Hour'] = df['Departure datetime'].dt.hour
-        df['Access Day of Year'] = df['Access Date'].dt.dayofyear
+        # df['Access Day of Year'] = df['Access Date'].dt.dayofyear
 
         # Drop instances where airline is wrong
         # Define a regular expression pattern to match non-letter characters or spaces
