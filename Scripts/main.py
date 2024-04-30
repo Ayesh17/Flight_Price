@@ -280,7 +280,7 @@ def main():
 
         # Train the model
         model = LSTM_model(input_shape)
-        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=1000)
 
 
         for i in range(len(X_test_dist)):
