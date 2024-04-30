@@ -2,3 +2,7 @@
 
 #Extracted_data/*
 
+.venv
+venv
+.DS_Store
+DS_Store

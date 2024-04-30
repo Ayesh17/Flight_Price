@@ -1,40 +1,25 @@
+import numpy as np
+from sklearn.model_selection import train_test_split
+
+
 import os
 from random import random
 
 import numpy as np
 import pandas as pd
-import pickle
-
-from keras import Input
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import SelectPercentile, f_classif, RFE
-from sklearn.model_selection import train_test_split
-from keras.models import Sequential
-from keras.layers import Bidirectional, LSTM, Dense, Dropout, SimpleRNN, GRU
-from keras.utils import to_categorical
-from sklearn.metrics import confusion_matrix
 import random
 import tensorflow as tf
-import keras
-from keras.callbacks import TensorBoard, EarlyStopping
-from sklearn.metrics import precision_score, recall_score, f1_score
-from sklearn.feature_selection import RFECV
-from sklearn.svm import SVC  # You may need to choose an appropriate estimator for your problem
-from sklearn.tree import DecisionTreeClassifier
-from datetime import datetime
-from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-import LSTM_model
-
+from LSTM_model import LSTM_model
 
 # Folder structure
 data_dir = 'Preprocessed_data'
-
 
 # Set random seeds for reproducibility
 random.seed(42)
 np.random.seed(42)
 tf.random.set_seed(42)
+
 
 def load_dataset(data_dir):
     # Get the current working directory
@@ -52,39 +37,46 @@ def load_dataset(data_dir):
             df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
             dfs.append(df)  # Append the DataFrame to the list
 
-    # # Concatenate all DataFrames into a single DataFrame
-    # combined_df = pd.concat(dfs, ignore_index=True)
-
-    # Concatenate all DataFrames into a single DataFrame based on 'travel_date' column
+    # Concatenate all DataFrames into a single DataFrame
     combined_df = pd.concat(dfs, ignore_index=True).sort_values(by='Travel Day of Year')
 
-    print("combined_df", combined_df.head())
-
-    column_names = combined_df.columns.tolist()
+    # Sort the DataFrame by 'Travel Day of Year' and 'Travel Hour'
+    combined_df = combined_df.sort_values(by=['Travel Day of Year', 'Travel Hour'])
 
     # Save as a CSV
-    combined_df.to_csv('combined_data.csv', index=False)
+    # combined_df.to_csv('combined_data.csv', index=False)
 
-    # Get the dataset and labels
-    dataset = combined_df.drop(columns=['Price ($)'])
-    labels = combined_df['Price ($)']
+    # Define the window size in terms of months
+    window_size_months = 4
 
-    print("dataset", dataset.shape)
-    print("labels", labels.shape)
+    # Get the minimum and maximum flight months
+    min_flight_month = combined_df['Travel Month'].min()
+    max_flight_month = combined_df['Travel Month'].max()
 
-    return dataset, labels
+    # List to store windowed datasets and labels
+    windowed_datasets = []
+    windowed_labels = []
 
+    # Iterate over the flight months
+    start_month = min_flight_month
+    while start_month + window_size_months -1 <= max_flight_month:
+        end_month = start_month + window_size_months
 
-def create_model(input_shape):
-    model = Sequential()
-    model.add(Input(shape=input_shape))
-    model.add(LSTM(128, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(64))
-    model.add(Dropout(0.2))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(1))
-    return model
+        # Filter data for the current window
+        window_data = combined_df[(combined_df['Travel Month'] >= start_month) & (combined_df['Travel Month'] < end_month)]
+
+        # Extract features and labels
+        window_dataset = window_data.drop(columns=['Price ($)'])
+        window_labels = window_data['Price ($)']
+
+        # Append to the list
+        windowed_datasets.append(window_dataset)
+        windowed_labels.append(window_labels)
+
+        # Move to the next window
+        start_month += 1
+
+    return windowed_datasets, windowed_labels
 
 
 def train_model(model, X_train, y_train, X_val, y_val, epochs):
@@ -105,8 +97,7 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
         val_mae = mean_absolute_error(y_val, y_val_pred)
         val_mse = mean_squared_error(y_val, y_val_pred)
 
-        print(
-            f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
+        print(f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
 
         # Calculate validation loss
         val_loss = model.evaluate(X_val, y_val, verbose=0)
@@ -139,6 +130,7 @@ for window_data in windowed_datasets:
     combined_test_data.append(test_data)
 
 def evaluate_model(model, X_test, y_test):
+
     # Compute predictions
     y_pred = model.predict(X_test)
 
@@ -146,54 +138,188 @@ def evaluate_model(model, X_test, y_test):
     mae = mean_absolute_error(y_test, y_pred)
     mse = mean_squared_error(y_test, y_pred)
 
-    print('Mean Absolute Error (MAE):', mae)
-    print('Mean Squared Error (MSE):', mse)
+    print(f"Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
+
+    return mae, mse
+
+def data_split(X_test, y_test):
+    # [Short(below 800)]
+    # JFK -> ATL(759)
+    # JFK -> ORD(738)
+    # ATL -> ORD(606)
+    # ATL -> DFW(739)
+    # DEN -> DFW(662)
+    #
+    # [Medium(800~1250)]
+    # LAX -> DEN(860)
+    # DEN -> ORD(806)
+    # ORD -> DFW(801)
+    # LAX -> DFW(1232)
+    # ATL -> DEN(1196)
+    #
+    # [Long(over 1250)]
+    # JFK -> LAX(2469)
+    # JFK -> DFW(1388)
+    # LAX -> DFW(1232)
+    # LAX -> ORD(1741)
+    # LAX -> ATL(1946)
+
+    # 'JFK': 0, 'LAX': 1, 'DEN': 2, 'ATL': 3, 'DFW': 4, 'ORD': 5
+
+
+    # Initialize empty DataFrames for each category
+    short_distance_X = pd.DataFrame(columns=X_test.columns)
+    short_distance_y = pd.Series()
+    medium_distance_X = pd.DataFrame(columns=X_test.columns)
+    medium_distance_y = pd.Series()
+    long_distance_X = pd.DataFrame(columns=X_test.columns)
+    long_distance_y = pd.Series()
+
+    # Boolean indexing for short distance
+    short_distance_conditions = (
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 4) |
+
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 2)
+    )
+    short_distance_X = X_test[short_distance_conditions]
+    short_distance_y = y_test[short_distance_conditions]
+
+    # Boolean indexing for medium distance
+    medium_distance_conditions = (
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 2) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 2) |
+
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 2) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 3)
+    )
+    medium_distance_X = X_test[medium_distance_conditions]
+    medium_distance_y = y_test[medium_distance_conditions]
+
+    # Boolean indexing for long distance
+    long_distance_conditions = (
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 3) |
+
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 1)
+    )
+    long_distance_X = X_test[long_distance_conditions]
+    long_distance_y = y_test[long_distance_conditions]
+
+
+    pd.set_option('display.max_columns', None)
+
+    # Display the resulting DataFrames
+    # print("Short Distance:")
+    # print(short_distance_X.head())
+    # print(short_distance_y.head())
+    #
+    # print("\nMedium Distance:")
+    # print(medium_distance_X.head())
+    # print(medium_distance_y.head())
+    #
+    # print("\nLong Distance:")
+    # print(long_distance_X.head())
+    # print(long_distance_y.head())
+
+    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X]
+    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y]
+
+
+    return X_test_dist, y_test_dist
 
 
 def main():
     # Load the dataset
-    dataset, labels = load_dataset(data_dir)
+    datasets, labels = load_dataset(data_dir)
+
+    for i in range(len(datasets)):
+        unique_values = datasets[i]['Travel Month'].unique()
+        # print("unique_values", unique_values)
+
+    # print(len(datasets))
+    print(datasets[0].head())
+
+    mae_list = []
+    mse_list = []
+    distance_type = ["Short Distance", "Medium Distance", "Long Distance"]
+
+    for i in range(len(datasets)):
+        print("\nWindow : ", i+1)
+
+        # Split the windowed data into train, validation, and test sets (80-10-10 split)
+        data = datasets[i]
+        label = labels[i]
+        train_size = int(0.8 * len(data))
+        val_size = int(0.1 * len(data))
+
+        X_train = data[:train_size]
+        y_train = label[:train_size]
+
+        X_val = data[train_size:train_size + val_size]
+        y_val = label[train_size:train_size + val_size]
+
+        X_test = data[train_size + val_size:]
+        y_test = label[train_size + val_size:]
+
+        X_test_dist, y_test_dist = data_split(X_test, y_test)
+
+        # Model Preparation
+
+        # Reshape X_train and X_val to add the timestep dimension
+        X_train_reshaped = np.expand_dims(X_train, axis=1)
+        X_val_reshaped = np.expand_dims(X_val, axis=1)
+        X_test_reshaped = np.expand_dims(X_test, axis=1)
+
+        # Print the shapes to verify
+        print("X_train shape after reshaping:", X_train_reshaped.shape)
+        print("X_val shape after reshaping:", X_val_reshaped.shape)
+        print("X_test shape after reshaping:", X_test_reshaped.shape)
+
+        input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
+
+        # Train the model
+        model = LSTM_model(input_shape)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
 
-    X_train, X_val, y_train, y_val = train_test_split(dataset, labels, test_size=0.2, random_state=42)
-    X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.50, random_state=42)
-    print("X_train", len(X_train))
-    print("X_val", len(X_val))
-    print("X_test", len(X_test))
+        for i in range(len(X_test_dist)):
+            X_test = X_test_dist[i]
+            y_test = y_test_dist[i]
+            X_test_reshaped = np.expand_dims(X_test, axis=1)
 
+            # Evaluate the model
+            print(distance_type[i])
+            mae, mse = evaluate_model(model, X_test_reshaped, y_test)
 
-    # # Convert labels to categorical format
-    # num_classes = 3  # Number of classes
-    # y_train = to_categorical(y_train, num_classes)
-    # y_val = to_categorical(y_val, num_classes)
-    # y_test = to_categorical(y_test, num_classes)
-    #
-    # Create the model
-    print("X_train shape:", X_train.shape[1])
+            mae_list.append(mae)
+            mse_list.append(mse)
 
-    # Reshape X_train and X_val to add the timestep dimension
-    X_train_reshaped = np.expand_dims(X_train, axis=1)
-    X_val_reshaped = np.expand_dims(X_val, axis=1)
-    X_test_reshaped = np.expand_dims(X_test, axis=1)
-
-    # Print the shapes to verify
-    print("X_train shape after reshaping:", X_train_reshaped.shape)
-    print("X_val shape after reshaping:", X_val_reshaped.shape)
-    print("X_test shape after reshaping:", X_test_reshaped.shape)
-
-    input_shape = (len(X_train), X_train.shape[1],)   # Shape of input data for LSTM model
-    print(input_shape)
-
-    #Updae this based on the model we use
-    model = LSTM_model.create_model(input_shape)
-
-    # Train the model
-    train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=1000)
-
-
-    # Evaluate the model
-    evaluate_model(model, X_test_reshaped, y_test)
-
+    print("\n\nEvaluation results")
+    for i in range(len(datasets)):
+        print()
+        for j in range(3): #for short, medium, long
+            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[i+j]:.2f} \tMSE: {mse_list[i+j]:.2f}")
 
 if __name__ == '__main__':
     main()

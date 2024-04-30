@@ -34,9 +34,10 @@ for file_name in os.listdir(input_folder):
 
         # Extract date of the year (day of the year) and hour components
         # df['Travel Year'] = df['Departure datetime'].dt.year
+        df['Travel Month'] = df['Departure datetime'].dt.month
         df['Travel Day of Year'] = df['Departure datetime'].dt.dayofyear
         df['Travel Hour'] = df['Departure datetime'].dt.hour
-        df['Access Day of Year'] = df['Departure datetime'].dt.dayofyear
+        # df['Access Day of Year'] = df['Access Date'].dt.dayofyear
 
         # Drop instances where airline is wrong
         # Define a regular expression pattern to match non-letter characters or spaces
@@ -44,23 +45,42 @@ for file_name in os.listdir(input_folder):
         # Filter the DataFrame to keep only rows where 'Airlines' column doesn't contain the pattern
         df = df[~df['Airline(s)'].str.contains(pattern)]
 
-        # Drop the original 'Arrival datetime' and 'Departure datetime' columns
+
+        # convert non numerical values to numerical
+        # Initialize LabelEncoder
+        label_encoder = LabelEncoder()
+
+        # Define a dictionary mapping categories to numerical values
+        origin_mapping = {'JFK': 0, 'LAX': 1, 'DEN': 2, 'ATL': 3, 'DFW': 4, 'ORD': 5}
+
+        # Map the categories in the 'Origin' and 'Destination' columns to the defined numerical values
+        df['Origin'] = df['Origin'].map(origin_mapping)
+        df['Destination'] = df['Destination'].map(origin_mapping)
+
+        # Get unique values from a column
+        unique_values = df['Airline(s)'].unique()
+        print("Airline list", unique_values)
+
+        # Map the categories in the 'Airline' column to the defined numerical values
+        airline_mapping = {'American': 0, 'AmericanAlaska': 0, 'JetBlue': 1, 'Delta': 2, 'Spirit': 3, 'Alaska': 4, 'Frontier': 5, 'United': 6, 'Sun Country Airlines': 7}
+
+        # Map the categories in the 'Airline(s)' column to the defined numerical values
+        df['Airline(s)'] = df['Airline(s)'].map(airline_mapping)
+        df['Airline(s)'] = df['Airline(s)'].fillna(-1)
+
+        # Drop rows where airline value is -1 (wrongly scrapped data)
+        df = df[df['Airline(s)'] != -1]
+
+        # Drop the columns that aren't relevant anymore
         df.drop(columns=['Arrival datetime'], inplace=True)
         df.drop(columns=['Departure datetime'], inplace=True)
         df.drop(columns=['Departure Date'], inplace=True)
         df.drop(columns=['Access Date'], inplace=True)
         df.drop(columns=['Travel Time'], inplace=True)
         df.drop(columns=['Layover'], inplace=True)
-        df.drop(columns=['Airline(s)'], inplace=True)
+        # df.drop(columns=['Airline(s)'], inplace=True)
         df.drop(columns=['CO2 Emission (kg)'], inplace=True)
         df.drop(columns=['Emission Diff (%)'], inplace=True)
-
-        # convert non numerical values to numerical
-        # Initialize LabelEncoder
-        label_encoder = LabelEncoder()
-
-        df['Origin'] = label_encoder.fit_transform(df['Origin'])
-        df['Destination'] = label_encoder.fit_transform(df['Destination'])
 
         print("df", df.head())
 
