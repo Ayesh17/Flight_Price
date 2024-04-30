@@ -117,6 +117,26 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
 
     model.set_weights(best_weights)
 
+# Initialize lists to store split data from each window
+combined_train_data = []
+combined_validation_data = []
+combined_test_data = []
+
+# Existing loop to process windowed data
+for window_data in windowed_datasets:
+    # Define the split indices
+    train_end = int(len(window_data) * 0.6)  # 60% of the data for training
+    validation_end = train_end + int(len(window_data) * 0.2)  # Additional 20% for validation
+
+    # Split the data sequentially
+    train_data = window_data[:train_end]
+    validation_data = window_data[train_end:validation_end]
+    test_data = window_data[train_end:]  # Test data starts from the beginning of validation and goes to the end
+
+    # Append to lists
+    combined_train_data.append(train_data)
+    combined_validation_data.append(validation_data)
+    combined_test_data.append(test_data)
 
 def evaluate_model(model, X_test, y_test):
     # Compute predictions
