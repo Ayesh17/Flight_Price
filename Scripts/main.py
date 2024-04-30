@@ -11,6 +11,7 @@ import random
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
+from Bi_LSTM_model import Bi_LSTM_model
 
 # Folder structure
 data_dir = 'Preprocessed_data'
@@ -299,7 +300,7 @@ def main():
         input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
 
         # Train the model
-        model = LSTM_model(input_shape)
+        model = Bi_LSTM_model(input_shape)
         train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
 
