@@ -6,7 +6,7 @@ import pandas as pd
 from Flight_Price.src.google_flight_analysis.scrape import *
 
 # Ensure the 'extracted_data' folder exists
-output_folder = os.path.join(os.getcwd(), '..', 'extracted_data')
+output_folder = os.path.join(os.getcwd(), "..", "extracted_data")
 os.makedirs(output_folder, exist_ok=True)
 
 # Airport codes
@@ -20,14 +20,14 @@ os.makedirs(output_folder, exist_ok=True)
 # Specify the origin, destination, and date range
 # origin = 'JFK'
 # dest = 'ATL'
-origin = 'DFW'
-dest = 'ORD'
+origin = "DFW"
+dest = "ORD"
 
 # start_date = '2024-04-05'  # Adjust as needed
 # end_date = '2024-08-17'  # Adjust as needed
 
-start_date = '2024-04-25'  # Adjust as needed
-end_date = '2024-11-25'  # Adjust as needed
+start_date = "2024-04-25"  # Adjust as needed
+end_date = "2024-11-25"  # Adjust as needed
 
 # Set the number of retry attempts
 max_retries = 10
@@ -49,7 +49,9 @@ for date in pd.date_range(start=start_date, end=end_date):
             break  # Break out of the retry loop if scraping succeeds
         except ValueError as e:
             retries += 1
-            print(f"Error scraping data for {date}. Retry {retries}/{max_retries}. Error: {e}")
+            print(
+                f"Error scraping data for {date}. Retry {retries}/{max_retries}. Error: {e}"
+            )
             if retries == max_retries:
                 print(f"Max retries reached for {date}. Skipping to the next date.")
                 break  # Move to the next date if max retries reached
@@ -67,7 +69,9 @@ if os.path.isfile(csv_file_path):
     # If the file exists, find a new filename
     i = 1
     while True:
-        new_filename = "flight_data_range_" + origin + "_to_" + dest + "_" + str(i) + ".csv"
+        new_filename = (
+            "flight_data_range_" + origin + "_to_" + dest + "_" + str(i) + ".csv"
+        )
         new_csv_file_path = os.path.join(output_folder, new_filename)
         if not os.path.isfile(new_csv_file_path):
             csv_file_path = new_csv_file_path
