@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 
+
 import os
 from random import random
 
@@ -9,8 +10,8 @@ import pandas as pd
 import random
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-# from LSTM_model import LSTM_model
-from LSTM_model import LSTM
+from LSTM_model import LSTM_model
+from Bi_LSTM_model import Bi_LSTM_model
 
 # Folder structure
 data_dir = 'Preprocessed_data'
@@ -59,12 +60,11 @@ def load_dataset(data_dir):
 
     # Iterate over the flight months
     start_month = min_flight_month
-    while start_month + window_size_months - 1 <= max_flight_month:
+    while start_month + window_size_months -1 <= max_flight_month:
         end_month = start_month + window_size_months
 
         # Filter data for the current window
-        window_data = combined_df[
-            (combined_df['Travel Month'] >= start_month) & (combined_df['Travel Month'] < end_month)]
+        window_data = combined_df[(combined_df['Travel Month'] >= start_month) & (combined_df['Travel Month'] < end_month)]
 
         # Extract features and labels
         window_dataset = window_data.drop(columns=['Price ($)'])
@@ -98,8 +98,7 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
         val_mae = mean_absolute_error(y_val, y_val_pred)
         val_mse = mean_squared_error(y_val, y_val_pred)
 
-        print(
-            f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
+        print(f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
 
         # Calculate validation loss
         val_loss = model.evaluate(X_val, y_val, verbose=0)
@@ -110,8 +109,29 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
 
     model.set_weights(best_weights)
 
+# Initialize lists to store split data from each window
+combined_train_data = []
+combined_validation_data = []
+combined_test_data = []
+
+# Existing loop to process windowed data
+for window_data in windowed_datasets:
+    # Define the split indices
+    train_end = int(len(window_data) * 0.6)  # 60% of the data for training
+    validation_end = train_end + int(len(window_data) * 0.2)  # Additional 20% for validation
+
+    # Split the data sequentially
+    train_data = window_data[:train_end]
+    validation_data = window_data[train_end:validation_end]
+    test_data = window_data[train_end:]  # Test data starts from the beginning of validation and goes to the end
+
+    # Append to lists
+    combined_train_data.append(train_data)
+    combined_validation_data.append(validation_data)
+    combined_test_data.append(test_data)
 
 def evaluate_model(model, X_test, y_test):
+
     # Compute predictions
     y_pred = model.predict(X_test)
 
@@ -122,7 +142,6 @@ def evaluate_model(model, X_test, y_test):
     print(f"Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
 
     return mae, mse
-
 
 def data_split(X_test, y_test):
     # [Short(below 800)]
@@ -148,6 +167,7 @@ def data_split(X_test, y_test):
 
     # 'JFK': 0, 'LAX': 1, 'DEN': 2, 'ATL': 3, 'DFW': 4, 'ORD': 5
 
+
     # Initialize empty DataFrames for each category
     short_distance_X = pd.DataFrame(columns=X_test.columns)
     short_distance_y = pd.Series()
@@ -158,54 +178,55 @@ def data_split(X_test, y_test):
 
     # Boolean indexing for short distance
     short_distance_conditions = (
-            (X_test['Origin'] == 0) & (X_test['Destination'] == 3) |
-            (X_test['Origin'] == 0) & (X_test['Destination'] == 5) |
-            (X_test['Origin'] == 3) & (X_test['Destination'] == 5) |
-            (X_test['Origin'] == 3) & (X_test['Destination'] == 4) |
-            (X_test['Origin'] == 2) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 4) |
 
-            (X_test['Origin'] == 3) & (X_test['Destination'] == 0) |
-            (X_test['Origin'] == 5) & (X_test['Destination'] == 0) |
-            (X_test['Origin'] == 5) & (X_test['Destination'] == 3) |
-            (X_test['Origin'] == 4) & (X_test['Destination'] == 3) |
-            (X_test['Origin'] == 4) & (X_test['Destination'] == 2)
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 2)
     )
     short_distance_X = X_test[short_distance_conditions]
     short_distance_y = y_test[short_distance_conditions]
 
     # Boolean indexing for medium distance
     medium_distance_conditions = (
-            (X_test['Origin'] == 1) & (X_test['Destination'] == 2) |
-            (X_test['Origin'] == 2) & (X_test['Destination'] == 5) |
-            (X_test['Origin'] == 5) & (X_test['Destination'] == 4) |
-            (X_test['Origin'] == 1) & (X_test['Destination'] == 4) |
-            (X_test['Origin'] == 3) & (X_test['Destination'] == 2) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 2) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 2) |
 
-            (X_test['Origin'] == 2) & (X_test['Destination'] == 1) |
-            (X_test['Origin'] == 5) & (X_test['Destination'] == 2) |
-            (X_test['Origin'] == 4) & (X_test['Destination'] == 5) |
-            (X_test['Origin'] == 4) & (X_test['Destination'] == 1) |
-            (X_test['Origin'] == 2) & (X_test['Destination'] == 3)
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 2) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 2) & (X_test['Destination'] == 3)
     )
     medium_distance_X = X_test[medium_distance_conditions]
     medium_distance_y = y_test[medium_distance_conditions]
 
     # Boolean indexing for long distance
     long_distance_conditions = (
-            (X_test['Origin'] == 0) & (X_test['Destination'] == 1) |
-            (X_test['Origin'] == 0) & (X_test['Destination'] == 4) |
-            (X_test['Origin'] == 1) & (X_test['Destination'] == 4) |
-            (X_test['Origin'] == 1) & (X_test['Destination'] == 5) |
-            (X_test['Origin'] == 1) & (X_test['Destination'] == 3) |
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 0) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 4) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 5) |
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 3) |
 
-            (X_test['Origin'] == 1) & (X_test['Destination'] == 0) |
-            (X_test['Origin'] == 4) & (X_test['Destination'] == 0) |
-            (X_test['Origin'] == 4) & (X_test['Destination'] == 1) |
-            (X_test['Origin'] == 5) & (X_test['Destination'] == 1) |
-            (X_test['Origin'] == 3) & (X_test['Destination'] == 1)
+        (X_test['Origin'] == 1) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 0) |
+        (X_test['Origin'] == 4) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 5) & (X_test['Destination'] == 1) |
+        (X_test['Origin'] == 3) & (X_test['Destination'] == 1)
     )
     long_distance_X = X_test[long_distance_conditions]
     long_distance_y = y_test[long_distance_conditions]
+
 
     pd.set_option('display.max_columns', None)
 
@@ -224,6 +245,7 @@ def data_split(X_test, y_test):
 
     X_test_dist = [short_distance_X, medium_distance_X, long_distance_X]
     y_test_dist = [short_distance_y, medium_distance_y, long_distance_y]
+
 
     return X_test_dist, y_test_dist
 
@@ -244,7 +266,7 @@ def main():
     distance_type = ["Short Distance", "Medium Distance", "Long Distance"]
 
     for i in range(len(datasets)):
-        print("\nWindow : ", i + 1)
+        print("\nWindow : ", i+1)
 
         # Split the windowed data into train, validation, and test sets (80-10-10 split)
         data = datasets[i]
@@ -278,8 +300,9 @@ def main():
         input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
 
         # Train the model
-        model = LSTM_model(input_shape)
+        model = Bi_LSTM_model(input_shape)
         train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+
 
         for i in range(len(X_test_dist)):
             X_test = X_test_dist[i]
@@ -296,9 +319,9 @@ def main():
     print("\n\nEvaluation results")
     for i in range(len(datasets)):
         print()
-        for j in range(3):  # for short, medium, long
-            print(f"Window {i + 1} {distance_type[j]}: \tMAE: {mae_list[i + j]:.2f} \tMSE: {mse_list[i + j]:.2f}")
-
+        for j in range(3): #for short, medium, long
+            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[i+j]:.2f} \tMSE: {mse_list[i+j]:.2f}")
 
 if __name__ == '__main__':
     main()
+

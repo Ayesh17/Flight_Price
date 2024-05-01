@@ -7,7 +7,7 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 
 
-def LSTM_model(input_shape):
+def Bi_LSTM_model(input_shape):
     model = Sequential()
     model.add(Input(shape=input_shape))
     model.add(LSTM(128, return_sequences=True))
