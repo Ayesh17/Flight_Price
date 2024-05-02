@@ -3,6 +3,9 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/Extracted_data" />
+      <excludeFolder url="file://$MODULE_DIR$/extracted_data - Copy" />
+      <excludeFolder url="file://$MODULE_DIR$/extracted_data_old" />
+      <excludeFolder url="file://$MODULE_DIR$/preprocessed_data" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.10 (Flight_Price_2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
