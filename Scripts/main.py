@@ -13,6 +13,10 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
 from Bi_LSTM_model import Bi_LSTM_model
 
+# RNN Model
+from Bi_RNN_model import bi_rnn_model
+from RNN_model import rnn_model
+
 # Folder structure
 data_dir = 'Preprocessed_data'
 

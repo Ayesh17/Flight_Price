@@ -1,8 +1,8 @@
 from keras.models import Sequential
-from keras.layers import SimpleRNN, Dense, Dropout
+from keras.layers import SimpleRNN, Dense, Dropout, Reshape, Input
 
 
-def create_unidirectional_rnn_model(input_shape):
+def rnn_model(input_shape):
     model = Sequential()
     model.add(SimpleRNN(128, return_sequences=True, input_shape=input_shape))
     model.add(Dropout(0.2))
@@ -11,3 +11,4 @@ def create_unidirectional_rnn_model(input_shape):
     model.add(Dense(64, activation='relu'))
     model.add(Dense(1))
     return model
+
