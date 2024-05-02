@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import SimpleRNN, Dense, Dropout, Reshape, Input
+from keras.layers import SimpleRNN, Dense, Dropout
 
 
 def rnn_model(input_shape):

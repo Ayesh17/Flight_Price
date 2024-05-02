@@ -45,6 +45,7 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
 
 def plot_learning_curves(history, filename, show_fig=False):
     plt.figure(figsize=(12, 6))
+    plt.suptitle(filename, fontsize=16)
     plt.subplot(1, 2, 1)
     plt.plot(history.history['loss'], label='Train Loss')
     plt.plot(history.history['val_loss'], label='Validation Loss')
@@ -73,7 +74,7 @@ def main(use_bidirectional=False):
         X_val = np.expand_dims(X_val, axis=1)
         model_type = 'Bi-RNN' if use_bidirectional else 'RNN'
         model = bi_rnn_model((1, X_train.shape[2])) if use_bidirectional else rnn_model((1, X_train.shape[2]))
-        history = train_model(model, X_train, y_train, X_val, y_val, epochs=10)
+        history = train_model(model, X_train, y_train, X_val, y_val, epochs=100)
         plot_learning_curves(history, f'learning_curve_{model_type}_window_{idx + 1}.png', model_type)
 
 
