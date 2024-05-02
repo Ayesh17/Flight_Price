@@ -7,6 +7,7 @@ from RNN_model import rnn_model
 from Bi_RNN_model import bi_rnn_model
 import tensorflow as tf
 import matplotlib
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 matplotlib.use('TkAgg')
 
@@ -65,9 +66,13 @@ def plot_learning_curves(history, filename, show_fig=False):
     plt.savefig(filename)
 
 
-def main(use_bidirectional=False):
+def main(use_bidirectional=True):
     data_dir = '../preprocessed_data'
     datasets, labels = load_dataset(data_dir)
+    mae_list = []
+    mse_list = []
+    results = []
+
     for idx, (data, label) in enumerate(zip(datasets, labels)):
         X_train, X_val, y_train, y_val = train_test_split(data, label, test_size=0.2, random_state=42)
         X_train = np.expand_dims(X_train, axis=1)
@@ -76,6 +81,17 @@ def main(use_bidirectional=False):
         model = bi_rnn_model((1, X_train.shape[2])) if use_bidirectional else rnn_model((1, X_train.shape[2]))
         history = train_model(model, X_train, y_train, X_val, y_val, epochs=100)
         plot_learning_curves(history, f'learning_curve_{model_type}_window_{idx + 1}.png', model_type)
+
+        y_pred = model.predict(X_val)
+        mae = mean_absolute_error(y_val, y_pred)
+        mse = mean_squared_error(y_val, y_pred)
+        mae_list.append(mae)
+        mse_list.append(mse)
+        results.append(f"Window {idx + 1}: MAE = {mae:.2f}, MSE = {mse:.2f}")
+
+    print("\n".join(results))
+    print("Average MAE:", np.mean(mae_list))
+    print("Average MSE:", np.mean(mse_list))
 
 
 if __name__ == '__main__':
