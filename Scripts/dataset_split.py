@@ -4,7 +4,7 @@ import pandas as pd
 
 # Load the CSV file
 # Note: Ensure you update the file path location specified below on your end to read the CSV file.
-file_path = "/Users/lawrencechuang/PycharmProjects/new_cs_791/Flight_Price/preprocessed_data/flight_data_range_DEN_to_DFW_preprocessed.csv"
+file_path = "/Users/lawrencechuang/PycharmProjects/new_cs_791/Flight_Price/preprocessed_data/flight_data_range_JFK_to_LAX_Apr-Nov_preprocessed.csv"
 df = pd.read_csv(file_path)
 
 # Get the CSV file's filename
