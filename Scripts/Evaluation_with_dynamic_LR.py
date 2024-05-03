@@ -8,12 +8,12 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
 from Bi_LSTM_model import Bi_LSTM_model
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
-
+import random
 # Folder structure
 data_dir = 'Preprocessed_data'
 
 # Set random seeds for reproducibility
-# random.seed(42)
+random.seed(42)
 np.random.seed(42)
 tf.random.set_seed(42)
 
@@ -81,7 +81,7 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
     # Early stopping
     early_stop = EarlyStopping(patience=25, verbose=1, restore_best_weights=True)
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)  # Set initial learning rate
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)  # Set initial learning rate
     model.compile(loss='mean_squared_error', optimizer=optimizer)  # Using mean squared error as loss for regression
     history = model.fit(X_train, y_train, epochs=epochs, validation_data=(X_val, y_val), callbacks=[reduce_lr, early_stop])
 
@@ -227,7 +227,7 @@ def main():
 
         # Train the model
         model = Bi_LSTM_model(input_shape)
-        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=1000)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
         for i in range(len(X_test_dist)):
             X_test = X_test_dist[i]

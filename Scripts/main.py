@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 
 
 import os
-from random import random
+import random
 
 import numpy as np
 import pandas as pd
