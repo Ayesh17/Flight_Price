@@ -17,6 +17,7 @@ tf.random.set_seed(42)
 
 def load_dataset(data_dir):
     dfs = []
+
     for file_name in os.listdir(data_dir):
         if file_name.endswith(".csv"):
             file_path = os.path.join(data_dir, file_name)
@@ -44,6 +45,50 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
     return history
 
 
+def data_split(X_test, y_test):
+    # Assume the structure of X_test is known and fixed
+    # Index 0 for Origin, Index 1 for Destination
+
+    # Define the conditions using indices
+    short_distance_conditions = (
+            (X_test[:, 0] == 0) & (X_test[:, 1] == 3) |  # JFK -> ATL
+            (X_test[:, 0] == 0) & (X_test[:, 1] == 5) |  # JFK -> ORD
+            (X_test[:, 0] == 3) & (X_test[:, 1] == 5) |  # ATL -> ORD
+            (X_test[:, 0] == 3) & (X_test[:, 1] == 4) |  # ATL -> DFW
+            (X_test[:, 0] == 2) & (X_test[:, 1] == 4)  # DEN -> DFW
+    )
+
+    medium_distance_conditions = (
+            (X_test[:, 0] == 1) & (X_test[:, 1] == 2) |  # LAX -> DEN
+            (X_test[:, 0] == 2) & (X_test[:, 1] == 5) |  # DEN -> ORD
+            (X_test[:, 0] == 5) & (X_test[:, 1] == 4) |  # ORD -> DFW
+            (X_test[:, 0] == 1) & (X_test[:, 1] == 4) |  # LAX -> DFW
+            (X_test[:, 0] == 3) & (X_test[:, 1] == 2)  # ATL -> DEN
+    )
+
+    long_distance_conditions = (
+            (X_test[:, 0] == 0) & (X_test[:, 1] == 1) |  # JFK -> LAX
+            (X_test[:, 0] == 0) & (X_test[:, 1] == 4) |  # JFK -> DFW
+            (X_test[:, 0] == 1) & (X_test[:, 1] == 4) |  # LAX -> DFW
+            (X_test[:, 0] == 1) & (X_test[:, 1] == 5) |  # LAX -> ORD
+            (X_test[:, 0] == 1) & (X_test[:, 1] == 3)  # LAX -> ATL
+    )
+
+    # Apply conditions
+    short_distance_X = X_test[short_distance_conditions]
+    short_distance_y = y_test[short_distance_conditions]
+    medium_distance_X = X_test[medium_distance_conditions]
+    medium_distance_y = y_test[medium_distance_conditions]
+    long_distance_X = X_test[long_distance_conditions]
+    long_distance_y = y_test[long_distance_conditions]
+
+    # Return the split data
+    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X]
+    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y]
+
+    return X_test_dist, y_test_dist
+
+
 def plot_learning_curves(history, filename, show_fig=False):
     plt.figure(figsize=(12, 6))
     plt.suptitle(filename, fontsize=16)
@@ -66,33 +111,124 @@ def plot_learning_curves(history, filename, show_fig=False):
     plt.savefig(filename)
 
 
-def main(use_bidirectional=True):
+# def main(use_bidirectional=True):
+#     data_dir = '../preprocessed_data'
+#     datasets, labels = load_dataset(data_dir)
+#     results = []
+#
+#     for idx, (data, label) in enumerate(zip(datasets, labels)):
+#         X_train, X_val, y_train, y_val = train_test_split(data, label, test_size=0.2, random_state=42)
+#         X_train = np.expand_dims(X_train, axis=1)
+#         X_val = np.expand_dims(X_val, axis=1)
+#         model_type = 'Bi-RNN' if use_bidirectional else 'RNN'
+#         model = bi_rnn_model((1, X_train.shape[2])) if use_bidirectional else rnn_model((1, X_train.shape[2]))
+#         history = train_model(model, X_train, y_train, X_val, y_val, epochs=100)
+#         plot_learning_curves(history, f'learning_curve_{model_type}_window_{idx + 1}.png', model_type)
+#
+#         # Split the validation data based on distance
+#         X_test_dist, y_test_dist = data_split(X_val, y_val)
+#         distance_types = ["Short Distance", "Medium Distance", "Long Distance"]
+#
+#         # Evaluate the model for each distance category
+#         for i, (X_dist, y_dist) in enumerate(zip(X_test_dist, y_test_dist)):
+#             y_pred = model.predict(X_dist)
+#             mae = mean_absolute_error(y_dist, y_pred)
+#             mse = mean_squared_error(y_dist, y_pred)
+#             results.append(f"Window {idx + 1} {distance_types[i]}: \tMAE: {mae:.2f} \tMSE: {mse:.2f}")
+#
+#     for result in results:
+#         print(result)
+#
+#
+# if __name__ == '__main__':
+#     main(use_bidirectional=False)  # Set as True to us Bi-Rnn or False to use RNN
+
+def evaluate_model(model, X_test, y_test):
+    # Compute predictions
+    y_pred = model.predict(X_test)
+
+    # Compute MAE and MSE
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+
+    print(f"Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
+
+    return mae, mse
+
+
+def main(use_bidirectional=False):
+    # Load the dataset
     data_dir = '../preprocessed_data'
     datasets, labels = load_dataset(data_dir)
+
     mae_list = []
     mse_list = []
-    results = []
+    distance_type = ["Short Distance", "Medium Distance", "Long Distance"]
 
-    for idx, (data, label) in enumerate(zip(datasets, labels)):
-        X_train, X_val, y_train, y_val = train_test_split(data, label, test_size=0.2, random_state=42)
-        X_train = np.expand_dims(X_train, axis=1)
-        X_val = np.expand_dims(X_val, axis=1)
-        model_type = 'Bi-RNN' if use_bidirectional else 'RNN'
-        model = bi_rnn_model((1, X_train.shape[2])) if use_bidirectional else rnn_model((1, X_train.shape[2]))
-        history = train_model(model, X_train, y_train, X_val, y_val, epochs=100)
-        plot_learning_curves(history, f'learning_curve_{model_type}_window_{idx + 1}.png', model_type)
+    for i in range(len(datasets)):
+        print("\nWindow : ", i + 1)
 
-        y_pred = model.predict(X_val)
-        mae = mean_absolute_error(y_val, y_pred)
-        mse = mean_squared_error(y_val, y_pred)
-        mae_list.append(mae)
-        mse_list.append(mse)
-        results.append(f"Window {idx + 1}: MAE = {mae:.2f}, MSE = {mse:.2f}")
+        # Split the windowed data into train, validation, and test sets (80-10-10 split)
+        data = datasets[i]
+        label = labels[i]
+        train_size = int(0.8 * len(data))
+        val_size = int(0.1 * len(data))
 
-    print("\n".join(results))
-    print("Average MAE:", np.mean(mae_list))
-    print("Average MSE:", np.mean(mse_list))
+        X_train = data[:train_size]
+        y_train = label[:train_size]
+
+        X_val = data[train_size:train_size + val_size]
+        y_val = label[train_size:train_size + val_size]
+
+        X_test = data[train_size + val_size:]
+        y_test = label[train_size + val_size:]
+
+        X_test_dist, y_test_dist = data_split(X_test, y_test)
+
+        # Model Preparation
+
+        # Reshape X_train and X_val to add the timestep dimension
+        X_train_reshaped = np.expand_dims(X_train, axis=1)
+        X_val_reshaped = np.expand_dims(X_val, axis=1)
+        X_test_reshaped = np.expand_dims(X_test, axis=1)
+
+        # Print the shapes to verify
+        print("X_train shape after reshaping:", X_train_reshaped.shape)
+        print("X_val shape after reshaping:", X_val_reshaped.shape)
+        print("X_test shape after reshaping:", X_test_reshaped.shape)
+
+        model_type = ''
+        # Choose the model based on the use_bidirectional flag
+        if use_bidirectional:
+            model = bi_rnn_model((X_train_reshaped.shape[1], X_train_reshaped.shape[2]))
+            model_type = 'Bi-RNN'
+        else:
+            model = rnn_model((X_train_reshaped.shape[1], X_train_reshaped.shape[2]))
+            model_type = 'RNN'
+
+        # Train the model
+        history = train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+        plot_learning_curves(history, f'learning_curve_{model_type}_window_{i + 1}.png', model_type)
+
+        for j in range(len(X_test_dist)):
+            X_test = X_test_dist[j]
+            y_test = y_test_dist[j]
+            X_test_reshaped = np.expand_dims(X_test, axis=1)
+
+            # Evaluate the model
+            print(distance_type[j])
+            mae, mse = evaluate_model(model, X_test_reshaped, y_test)
+
+            mae_list.append(mae)
+            mse_list.append(mse)
+
+    print("\n\nEvaluation results")
+    for i in range(len(datasets)):
+        print()
+        for j in range(3):  # for short, medium, long
+            print(
+                f"Window {i + 1} {distance_type[j]}: \tMAE: {mae_list[3 * i + j]:.2f} \tMSE: {mse_list[3 * i + j]:.2f}")
 
 
 if __name__ == '__main__':
-    main()
+    main(use_bidirectional=False)  # Change to False to use RNN
