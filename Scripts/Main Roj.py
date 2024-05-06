@@ -10,7 +10,7 @@ import pandas as pd
 import random
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-from LSTM_model import LSTM_model
+# from LSTM_model import LSTM_model
 from GRU_model import GRU_model
 
 # Folder structure
@@ -252,6 +252,10 @@ def main():
         # Split the windowed data into train, validation, and test sets (80-10-10 split)
         data = datasets[i]
         label = labels[i]
+        ## shuffling the data
+        data = data.sample(frac=1).reset_index(drop=True)
+        label = label.sample(frac=1).reset_index(drop=True)
+        print('data -----------:',data.head())
         train_size = int(0.8 * len(data))
         val_size = int(0.1 * len(data))
 
@@ -281,10 +285,14 @@ def main():
         input_shape = (len(X_train), X_train.shape[1],)
 
         # Train the model
-        model = LSTM_model(input_shape)
-        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+        model = GRU_model(input_shape)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=30)
 
-
+        # input_shape = (X_train.shape[1], X_train.shape[2])
+        #
+        # # Build and train original model
+        # model = GRU_model(input_shape)
+        # history = model.fit(X_train, y_train, epochs=30, batch_size=32, validation_split=0.1)
 
 
         for i in range(len(X_test_dist)):
