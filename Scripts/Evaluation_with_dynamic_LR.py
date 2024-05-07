@@ -6,7 +6,9 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
-from Bi_LSTM_model import Bi_LSTM_model
+from Bidirectional_LSTM_model import Bi_LSTM_model
+from GRU_model import GRU_model
+from Bidirectional_GRU_model import Bidirectional_GRU_model
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
 import random
 # Folder structure
@@ -41,7 +43,7 @@ def load_dataset(data_dir):
     combined_df = combined_df.sort_values(by=['Travel Day of Year', 'Travel Hour'])
 
     # Define the window size in terms of months
-    window_size_months = 4
+    window_size_months = 7
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()
@@ -228,7 +230,7 @@ def main():
         input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
 
         # Train the model
-        model = Bi_LSTM_model(input_shape)
+        model = LSTM_model(input_shape)
         train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
         for i in range(len(X_test_dist)):

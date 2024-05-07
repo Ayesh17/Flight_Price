@@ -11,7 +11,9 @@ import random
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
-from Bi_LSTM_model import Bi_LSTM_model
+from Bidirectional_LSTM_model import Bi_LSTM_model
+from GRU_model import GRU_model
+from Bidirectional_GRU_model import Bidirectional_GRU_model
 from sklearn.model_selection import train_test_split
 
 
@@ -46,40 +48,12 @@ def load_dataset(data_dir):
     # Sort the DataFrame by 'Travel Day of Year' and 'Travel Hour'
     combined_df = combined_df.sort_values(by=['Travel Day of Year', 'Travel Hour'])
 
-    # Save as a CSV
-    # combined_df.to_csv('combined_data.csv', index=False)
 
-    # Define the window size in terms of months
-    window_size_months = 8
 
-    # Get the minimum and maximum flight months
-    min_flight_month = combined_df['Travel Month'].min()
-    max_flight_month = combined_df['Travel Month'].max()
+    dataset = combined_df.drop(columns=['Price ($)'])
+    labels = combined_df['Price ($)']
 
-    # List to store windowed datasets and labels
-    windowed_datasets = []
-    windowed_labels = []
-
-    # Iterate over the flight months
-    start_month = min_flight_month
-    while start_month + window_size_months -1 <= max_flight_month:
-        end_month = start_month + window_size_months
-
-        # Filter data for the current window
-        window_data = combined_df[(combined_df['Travel Month'] >= start_month) & (combined_df['Travel Month'] < end_month)]
-
-        # Extract features and labels
-        window_dataset = window_data.drop(columns=['Price ($)'])
-        window_labels = window_data['Price ($)']
-
-        # Append to the list
-        windowed_datasets.append(window_dataset)
-        windowed_labels.append(window_labels)
-
-        # Move to the next window
-        start_month += 1
-
-    return windowed_datasets, windowed_labels
+    return dataset, labels
 
 
 def train_model(model, X_train, y_train, X_val, y_val, epochs):
@@ -117,6 +91,8 @@ def evaluate_model(model, X_test, y_test):
 
     # Compute predictions
     y_pred = model.predict(X_test)
+
+    print("price", y_test, y_pred)
 
     # Compute MAE and MSE
     mae = mean_absolute_error(y_test, y_pred)
@@ -238,76 +214,65 @@ def data_split(X_test, y_test):
 
 def main():
     # Load the dataset
-    datasets, labels = load_dataset(data_dir)
+    dataset, labels = load_dataset(data_dir)
 
-    for i in range(len(datasets)):
-        unique_values = datasets[i]['Travel Month'].unique()
-        # print("unique_values", unique_values)
+    # for i in range(len(datasets)):
+    #     unique_values = datasets[i]['Travel Month'].unique()
+    #     # print("unique_values", unique_values)
 
     # print(len(datasets))
-    print(datasets[0].head())
+    print(dataset.head())
 
     mae_list = []
     mse_list = []
     distance_type = ["Short Distance", "Medium Distance", "Long Distance", "Overall"]
 
-    for i in range(len(datasets)):
-        print("\nWindow : ", i+1)
-
-        # Split the windowed data into train, validation, and test sets (80-10-10 split)
-        data = datasets[i]
-        label = labels[i]
-        train_size = int(0.8 * len(data))
-        val_size = int(0.1 * len(data))
 
 
+    # Split the windowed data into train, validation, and test sets (80-10-10 split)
+    # Split data into training and other data first
+    X_train, X_other, y_train, y_other = train_test_split(dataset, labels, test_size=0.2, random_state=42)  # 80% training, 20% other
 
-        # Split data into training and other data first
-        X_train, X_other, y_train, y_other = train_test_split(data, label, test_size=0.2, random_state=42)  # 80% training, 20% other
+    # Split the other data into validation and test sets
+    X_val, X_test, y_val, y_test = train_test_split(X_other, y_other, test_size=0.5, random_state=42)  # Splits other into 50% validation, 50% test
 
-        # Split the other data into validation and test sets
-        X_val, X_test, y_val, y_test = train_test_split(X_other, y_other, test_size=0.5, random_state=42)  # Splits other into 50% validation, 50% test
+    X_test_dist, y_test_dist = data_split(X_test, y_test)
 
-        X_test_dist, y_test_dist = data_split(X_test, y_test)
+    # Model Preparation
 
-        # Model Preparation
+    # Reshape X_train and X_val to add the timestep dimension
+    X_train_reshaped = np.expand_dims(X_train, axis=1)
+    X_val_reshaped = np.expand_dims(X_val, axis=1)
+    X_test_reshaped = np.expand_dims(X_test, axis=1)
 
-        # Reshape X_train and X_val to add the timestep dimension
-        X_train_reshaped = np.expand_dims(X_train, axis=1)
-        X_val_reshaped = np.expand_dims(X_val, axis=1)
+    # Print the shapes to verify
+    print("X_train shape after reshaping:", X_train_reshaped.shape)
+    print("X_val shape after reshaping:", X_val_reshaped.shape)
+    print("X_test shape after reshaping:", X_test_reshaped.shape)
+
+    input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
+
+    # Train the model
+    model = Bidirectional_GRU_model(input_shape)
+    train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+
+
+    for i in range(len(X_test_dist)):
+        X_test = X_test_dist[i]
+        y_test = y_test_dist[i]
         X_test_reshaped = np.expand_dims(X_test, axis=1)
 
-        # Print the shapes to verify
-        print("X_train shape after reshaping:", X_train_reshaped.shape)
-        print("X_val shape after reshaping:", X_val_reshaped.shape)
-        print("X_test shape after reshaping:", X_test_reshaped.shape)
+        # Evaluate the model
+        print(distance_type[i])
+        mae, mse = evaluate_model(model, X_test_reshaped, y_test)
 
-        input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
+        mae_list.append(mae)
+        mse_list.append(mse)
 
-        # Train the model
-        model = LSTM_model(input_shape)
-        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
-
-
-        for i in range(len(X_test_dist)):
-            X_test = X_test_dist[i]
-            y_test = y_test_dist[i]
-            X_test_reshaped = np.expand_dims(X_test, axis=1)
-
-            # Evaluate the model
-            print(distance_type[i])
-            mae, mse = evaluate_model(model, X_test_reshaped, y_test)
-
-            mae_list.append(mae)
-            mse_list.append(mse)
-
-    count = 0
     print("\n\nEvaluation results")
-    for i in range(len(datasets)):
-        print()
-        for j in range(len(distance_type)): #for short, medium, long
-            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[count]:.2f} \tMSE: {mse_list[count]:.2f}")
-            count += 1
+    for i in range(len(distance_type)): #for short, medium, long
+        print(f"Window {i+1} {distance_type[i]}: \tMAE: {mae_list[i]:.2f} \tMSE: {mse_list[i]:.2f}")
+
 
 if __name__ == '__main__':
     main()

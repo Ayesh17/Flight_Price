@@ -1,7 +1,3 @@
-import numpy as np
-from sklearn.model_selection import train_test_split
-
-
 import os
 import random
 
@@ -11,7 +7,9 @@ import random
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
+from Bidirectional_LSTM_model import Bi_LSTM_model
 from GRU_model import GRU_model
+from Bidirectional_GRU_model import Bidirectional_GRU_model
 
 # Folder structure
 data_dir = 'Preprocessed_data'
@@ -48,7 +46,7 @@ def load_dataset(data_dir):
     # combined_df.to_csv('combined_data.csv', index=False)
 
     # Define the window size in terms of months
-    window_size_months = 6
+    window_size_months = 7
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()
