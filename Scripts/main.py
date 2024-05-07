@@ -11,6 +11,10 @@ from Bidirectional_LSTM_model import Bi_LSTM_model
 from GRU_model import GRU_model
 from Bidirectional_GRU_model import Bidirectional_GRU_model
 
+# RNN Model
+from Bi_RNN_model import bi_rnn_model
+from RNN_model import rnn_model
+
 # Folder structure
 data_dir = 'Preprocessed_data'
 
