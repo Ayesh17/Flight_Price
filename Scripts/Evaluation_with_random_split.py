@@ -1,14 +1,20 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
+
+
 import os
-from random import random
+import random
+
+import numpy as np
 import pandas as pd
+import random
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
 from Bi_LSTM_model import Bi_LSTM_model
-from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
-import random
+from sklearn.model_selection import train_test_split
+
+
 # Folder structure
 data_dir = 'Preprocessed_data'
 
@@ -40,8 +46,11 @@ def load_dataset(data_dir):
     # Sort the DataFrame by 'Travel Day of Year' and 'Travel Hour'
     combined_df = combined_df.sort_values(by=['Travel Day of Year', 'Travel Hour'])
 
+    # Save as a CSV
+    # combined_df.to_csv('combined_data.csv', index=False)
+
     # Define the window size in terms of months
-    window_size_months = 4
+    window_size_months = 8
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()
@@ -53,12 +62,11 @@ def load_dataset(data_dir):
 
     # Iterate over the flight months
     start_month = min_flight_month
-    while start_month + window_size_months - 1 <= max_flight_month:
+    while start_month + window_size_months -1 <= max_flight_month:
         end_month = start_month + window_size_months
 
         # Filter data for the current window
-        window_data = combined_df[
-            (combined_df['Travel Month'] >= start_month) & (combined_df['Travel Month'] < end_month)]
+        window_data = combined_df[(combined_df['Travel Month'] >= start_month) & (combined_df['Travel Month'] < end_month)]
 
         # Extract features and labels
         window_dataset = window_data.drop(columns=['Price ($)'])
@@ -75,18 +83,38 @@ def load_dataset(data_dir):
 
 
 def train_model(model, X_train, y_train, X_val, y_val, epochs):
-    # Dynamic learning rate scheduling
-    reduce_lr = ReduceLROnPlateau(factor=0.1, patience=10, min_lr=1e-6, verbose=1)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+    model.compile(loss='mean_squared_error', optimizer=optimizer) # Using mean squared error as loss for regression
 
-    # Early stopping
-    early_stop = EarlyStopping(patience=25, verbose=1, restore_best_weights=True)
+    lowest_val_loss = float('inf')  # Initialize with a large value
+    best_weights = None
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)  # Set initial learning rate
-    model.compile(loss='mean_squared_error', optimizer=optimizer)  # Using mean squared error as loss for regression
-    history = model.fit(X_train, y_train, epochs=epochs, validation_data=(X_val, y_val), callbacks=[reduce_lr, early_stop])
+    for epoch in range(epochs):
+        history = model.fit(X_train, y_train, epochs=1, verbose=0)
 
+        # Calculate training predictions
+        y_train_pred = model.predict(X_train)
+        train_mae = mean_absolute_error(y_train, y_train_pred)
+        train_mse = mean_squared_error(y_train, y_train_pred)
+
+        # Calculate validation predictions
+        y_val_pred = model.predict(X_val)
+        val_mae = mean_absolute_error(y_val, y_val_pred)
+        val_mse = mean_squared_error(y_val, y_val_pred)
+
+        print(f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
+
+        # Calculate validation loss
+        val_loss = model.evaluate(X_val, y_val, verbose=0)
+
+        if val_loss < lowest_val_loss:
+            lowest_val_loss = val_loss
+            best_weights = model.get_weights()
+
+    model.set_weights(best_weights)
 
 def evaluate_model(model, X_test, y_test):
+
     # Compute predictions
     y_pred = model.predict(X_test)
 
@@ -121,6 +149,7 @@ def data_split(X_test, y_test):
     # LAX -> ATL(1946)
 
     # 'JFK': 0, 'LAX': 1, 'DEN': 2, 'ATL': 3, 'DFW': 4, 'ORD': 5
+
 
     # Initialize empty DataFrames for each category
     short_distance_X = pd.DataFrame(columns=X_test.columns)
@@ -181,7 +210,21 @@ def data_split(X_test, y_test):
     long_distance_X = X_test[long_distance_conditions]
     long_distance_y = y_test[long_distance_conditions]
 
+
     pd.set_option('display.max_columns', None)
+
+    # Display the resulting DataFrames
+    # print("Short Distance:")
+    # print(short_distance_X.head())
+    # print(short_distance_y.head())
+    #
+    # print("\nMedium Distance:")
+    # print(medium_distance_X.head())
+    # print(medium_distance_y.head())
+    #
+    # print("\nLong Distance:")
+    # print(long_distance_X.head())
+    # print(long_distance_y.head())
 
     overall_X = X_test
     overall_y = y_test
@@ -189,11 +232,20 @@ def data_split(X_test, y_test):
     X_test_dist = [short_distance_X, medium_distance_X, long_distance_X, overall_X]
     y_test_dist = [short_distance_y, medium_distance_y, long_distance_y, overall_y]
 
+
     return X_test_dist, y_test_dist
+
 
 def main():
     # Load the dataset
     datasets, labels = load_dataset(data_dir)
+
+    for i in range(len(datasets)):
+        unique_values = datasets[i]['Travel Month'].unique()
+        # print("unique_values", unique_values)
+
+    # print(len(datasets))
+    print(datasets[0].head())
 
     mae_list = []
     mse_list = []
@@ -208,14 +260,13 @@ def main():
         train_size = int(0.8 * len(data))
         val_size = int(0.1 * len(data))
 
-        X_train = data[:train_size]
-        y_train = label[:train_size]
 
-        X_val = data[train_size:train_size + val_size]
-        y_val = label[train_size:train_size + val_size]
 
-        X_test = data[train_size + val_size:]
-        y_test = label[train_size + val_size:]
+        # Split data into training and other data first
+        X_train, X_other, y_train, y_other = train_test_split(data, label, test_size=0.2, random_state=42)  # 80% training, 20% other
+
+        # Split the other data into validation and test sets
+        X_val, X_test, y_val, y_test = train_test_split(X_other, y_other, test_size=0.5, random_state=42)  # Splits other into 50% validation, 50% test
 
         X_test_dist, y_test_dist = data_split(X_test, y_test)
 
@@ -224,12 +275,19 @@ def main():
         # Reshape X_train and X_val to add the timestep dimension
         X_train_reshaped = np.expand_dims(X_train, axis=1)
         X_val_reshaped = np.expand_dims(X_val, axis=1)
+        X_test_reshaped = np.expand_dims(X_test, axis=1)
+
+        # Print the shapes to verify
+        print("X_train shape after reshaping:", X_train_reshaped.shape)
+        print("X_val shape after reshaping:", X_val_reshaped.shape)
+        print("X_test shape after reshaping:", X_test_reshaped.shape)
 
         input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
 
         # Train the model
-        model = Bi_LSTM_model(input_shape)
+        model = LSTM_model(input_shape)
         train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+
 
         for i in range(len(X_test_dist)):
             X_test = X_test_dist[i]
@@ -247,10 +305,10 @@ def main():
     print("\n\nEvaluation results")
     for i in range(len(datasets)):
         print()
-        for j in range(len(distance_type)):  # for short, medium, long
-            print(f"Window {i + 1} {distance_type[j]}: \tMAE: {mae_list[count]:.2f} \tMSE: {mse_list[count]:.2f}")
+        for j in range(len(distance_type)): #for short, medium, long
+            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[count]:.2f} \tMSE: {mse_list[count]:.2f}")
             count += 1
-
 
 if __name__ == '__main__':
     main()
+
