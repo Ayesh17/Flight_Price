@@ -183,11 +183,13 @@ def data_split(X_test, y_test):
 
     pd.set_option('display.max_columns', None)
 
-    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X]
-    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y]
+    overall_X = X_test
+    overall_y = y_test
+
+    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X, overall_X]
+    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y, overall_y]
 
     return X_test_dist, y_test_dist
-
 
 def main():
     # Load the dataset
@@ -195,7 +197,7 @@ def main():
 
     mae_list = []
     mse_list = []
-    distance_type = ["Short Distance", "Medium Distance", "Long Distance"]
+    distance_type = ["Short Distance", "Medium Distance", "Long Distance", "Overall"]
 
     for i in range(len(datasets)):
         print("\nWindow : ", i+1)
@@ -244,8 +246,8 @@ def main():
     print("\n\nEvaluation results")
     for i in range(len(datasets)):
         print()
-        for j in range(3):  # for short, medium, long
-            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[i+j]:.2f} \tMSE: {mse_list[i+j]:.2f}")
+        for j in range(len(distance_type)):  # for short, medium, long
+            print(f"Window {i + 1} {distance_type[j]}: \tMAE: {mae_list[i + j]:.2f} \tMSE: {mse_list[i + j]:.2f}")
 
 if __name__ == '__main__':
     main()

@@ -48,7 +48,7 @@ def load_dataset(data_dir):
     # combined_df.to_csv('combined_data.csv', index=False)
 
     # Define the window size in terms of months
-    window_size_months = 4
+    window_size_months = 5
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()
@@ -81,7 +81,9 @@ def load_dataset(data_dir):
 
 
 def train_model(model, X_train, y_train, X_val, y_val, epochs):
-    model.compile(loss='mean_squared_error', optimizer='adam')  # Using mean squared error as loss for regression
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+    model.compile(loss='mean_squared_error', optimizer=optimizer) # Using mean squared error as loss for regression
+
     lowest_val_loss = float('inf')  # Initialize with a large value
     best_weights = None
 
@@ -222,8 +224,11 @@ def data_split(X_test, y_test):
     # print(long_distance_X.head())
     # print(long_distance_y.head())
 
-    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X]
-    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y]
+    overall_X = X_test
+    overall_y = y_test
+
+    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X, overall_X]
+    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y, overall_y]
 
 
     return X_test_dist, y_test_dist
@@ -242,7 +247,7 @@ def main():
 
     mae_list = []
     mse_list = []
-    distance_type = ["Short Distance", "Medium Distance", "Long Distance"]
+    distance_type = ["Short Distance", "Medium Distance", "Long Distance", "Overall"]
 
     for i in range(len(datasets)):
         print("\nWindow : ", i+1)
@@ -263,6 +268,7 @@ def main():
         y_test = label[train_size + val_size:]
 
         X_test_dist, y_test_dist = data_split(X_test, y_test)
+
 
         # Model Preparation
 
@@ -298,7 +304,7 @@ def main():
     print("\n\nEvaluation results")
     for i in range(len(datasets)):
         print()
-        for j in range(3): #for short, medium, long
+        for j in range(len(distance_type)): #for short, medium, long
             print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[i+j]:.2f} \tMSE: {mse_list[i+j]:.2f}")
 
 if __name__ == '__main__':
