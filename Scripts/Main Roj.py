@@ -3,14 +3,14 @@ from sklearn.model_selection import train_test_split
 
 
 import os
-import random
+from random import random
 
 import numpy as np
 import pandas as pd
 import random
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-from LSTM_model import LSTM_model
+# from LSTM_model import LSTM_model
 from GRU_model import GRU_model
 
 # Folder structure
@@ -48,7 +48,7 @@ def load_dataset(data_dir):
     # combined_df.to_csv('combined_data.csv', index=False)
 
     # Define the window size in terms of months
-    window_size_months = 6
+    window_size_months = 4
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()
@@ -81,9 +81,7 @@ def load_dataset(data_dir):
 
 
 def train_model(model, X_train, y_train, X_val, y_val, epochs):
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-    model.compile(loss='mean_squared_error', optimizer=optimizer) # Using mean squared error as loss for regression
-
+    model.compile(loss='mean_squared_error', optimizer='adam')  # Using mean squared error as loss for regression
     lowest_val_loss = float('inf')  # Initialize with a large value
     best_weights = None
 
@@ -110,6 +108,7 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs):
             best_weights = model.get_weights()
 
     model.set_weights(best_weights)
+
 
 
 def evaluate_model(model, X_test, y_test):
@@ -225,11 +224,8 @@ def data_split(X_test, y_test):
     # print(long_distance_X.head())
     # print(long_distance_y.head())
 
-    overall_X = X_test
-    overall_y = y_test
-
-    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X, overall_X]
-    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y, overall_y]
+    X_test_dist = [short_distance_X, medium_distance_X, long_distance_X]
+    y_test_dist = [short_distance_y, medium_distance_y, long_distance_y]
 
 
     return X_test_dist, y_test_dist
@@ -248,7 +244,7 @@ def main():
 
     mae_list = []
     mse_list = []
-    distance_type = ["Short Distance", "Medium Distance", "Long Distance", "Overall"]
+    distance_type = ["Short Distance", "Medium Distance", "Long Distance"]
 
     for i in range(len(datasets)):
         print("\nWindow : ", i+1)
@@ -256,6 +252,10 @@ def main():
         # Split the windowed data into train, validation, and test sets (80-10-10 split)
         data = datasets[i]
         label = labels[i]
+        ## shuffling the data
+        data = data.sample(frac=1).reset_index(drop=True)
+        label = label.sample(frac=1).reset_index(drop=True)
+        print('data -----------:',data.head())
         train_size = int(0.8 * len(data))
         val_size = int(0.1 * len(data))
 
@@ -269,7 +269,6 @@ def main():
         y_test = label[train_size + val_size:]
 
         X_test_dist, y_test_dist = data_split(X_test, y_test)
-
 
         # Model Preparation
 
@@ -286,10 +285,14 @@ def main():
         input_shape = (len(X_train), X_train.shape[1],)
 
         # Train the model
-        model = LSTM_model(input_shape)
-        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+        model = GRU_model(input_shape)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=30)
 
-
+        # input_shape = (X_train.shape[1], X_train.shape[2])
+        #
+        # # Build and train original model
+        # model = GRU_model(input_shape)
+        # history = model.fit(X_train, y_train, epochs=30, batch_size=32, validation_split=0.1)
 
 
         for i in range(len(X_test_dist)):
@@ -304,13 +307,11 @@ def main():
             mae_list.append(mae)
             mse_list.append(mse)
 
-    count = 0
     print("\n\nEvaluation results")
     for i in range(len(datasets)):
         print()
-        for j in range(len(distance_type)): #for short, medium, long
-            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[count]:.2f} \tMSE: {mse_list[count]:.2f}")
-            count += 1
+        for j in range(3): #for short, medium, long
+            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[i+j]:.2f} \tMSE: {mse_list[i+j]:.2f}")
 
 if __name__ == '__main__':
     main()
