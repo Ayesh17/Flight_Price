@@ -48,7 +48,7 @@ def load_dataset(data_dir):
     # combined_df.to_csv('combined_data.csv', index=False)
 
     # Define the window size in terms of months
-    window_size_months = 5
+    window_size_months = 6
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()
@@ -286,7 +286,7 @@ def main():
 
         # Train the model
         model = Bi_LSTM_model(input_shape)
-        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
+        train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=2)
 
 
         for i in range(len(X_test_dist)):
@@ -301,11 +301,13 @@ def main():
             mae_list.append(mae)
             mse_list.append(mse)
 
+    count = 0
     print("\n\nEvaluation results")
     for i in range(len(datasets)):
         print()
         for j in range(len(distance_type)): #for short, medium, long
-            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[i+j]:.2f} \tMSE: {mse_list[i+j]:.2f}")
+            print(f"Window {i+1} {distance_type[j]}: \tMAE: {mae_list[count]:.2f} \tMSE: {mse_list[count]:.2f}")
+            count += 1
 
 if __name__ == '__main__':
     main()
