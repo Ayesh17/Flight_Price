@@ -82,6 +82,9 @@ for file_name in os.listdir(input_folder):
         df.drop(columns=['CO2 Emission (kg)'], inplace=True)
         df.drop(columns=['Emission Diff (%)'], inplace=True)
 
+        # # Drop rows where number of stops is not equal to 0
+        # df = df[df['Num Stops'] == 0]
+
         print("df", df.head())
 
         column_names = df.columns.tolist()

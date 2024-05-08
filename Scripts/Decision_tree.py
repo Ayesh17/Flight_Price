@@ -1,30 +1,13 @@
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
-
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 import os
-import random
-
-import numpy as np
-import pandas as pd
-import random
-import tensorflow as tf
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from LSTM_model import LSTM_model
-from Bidirectional_LSTM_model import Bi_LSTM_model
-from GRU_model import GRU_model
-from Bidirectional_GRU_model import Bidirectional_GRU_model
-from sklearn.model_selection import train_test_split
-
 
 # Folder structure
 data_dir = 'Preprocessed_data'
-
-# Set random seeds for reproducibility
-random.seed(42)
-np.random.seed(42)
-tf.random.set_seed(42)
-
 
 def load_dataset(data_dir):
     # Get the current working directory
@@ -55,54 +38,15 @@ def load_dataset(data_dir):
 
     return dataset, labels
 
-
-def train_model(model, X_train, y_train, X_val, y_val, epochs):
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-    model.compile(loss='mean_squared_error', optimizer=optimizer) # Using mean squared error as loss for regression
-
-    lowest_val_loss = float('inf')  # Initialize with a large value
-    best_weights = None
-
-    for epoch in range(epochs):
-        history = model.fit(X_train, y_train, epochs=1, verbose=0)
-
-        # Calculate training predictions
-        y_train_pred = model.predict(X_train)
-        train_mae = mean_absolute_error(y_train, y_train_pred)
-        train_mse = mean_squared_error(y_train, y_train_pred)
-
-        # Calculate validation predictions
-        y_val_pred = model.predict(X_val)
-        val_mae = mean_absolute_error(y_val, y_val_pred)
-        val_mse = mean_squared_error(y_val, y_val_pred)
-
-        print(f'Epoch {epoch + 1}/{epochs} - Training MAE: {train_mae:.4f} - Training MSE: {train_mse:.4f} - Validation MAE: {val_mae:.4f} - Validation MSE: {val_mse:.4f}')
-
-        # Calculate validation loss
-        val_loss = model.evaluate(X_val, y_val, verbose=0)
-
-        if val_loss < lowest_val_loss:
-            lowest_val_loss = val_loss
-            best_weights = model.get_weights()
-
-    model.set_weights(best_weights)
-
 def evaluate_model(model, X_test, y_test):
-
     # Compute predictions
     y_pred = model.predict(X_test)
-
-    # print("Price")
-    # print(len(y_test), len(y_pred))
-    # for i in range(len(y_test)):
-    #     print(i, "real :", y_test.iloc[i], "predicted :",y_pred[i])
-
 
     # Compute MAE and MSE
     mae = mean_absolute_error(y_test, y_pred)
     mse = mean_squared_error(y_test, y_pred)
 
-    print(f"Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
+    print(f"Mean Absolute Error (MAE): {mae:.2f}\tMean Squared Error (MSE): {mse:.2f}")
 
     return mae, mse
 
@@ -220,64 +164,36 @@ def main():
     # Load the dataset
     dataset, labels = load_dataset(data_dir)
 
-    # for i in range(len(datasets)):
-    #     unique_values = datasets[i]['Travel Month'].unique()
-    #     # print("unique_values", unique_values)
+    # Split the dataset into train, validation, and test sets
+    X_train, X_other, y_train, y_other = train_test_split(dataset, labels, test_size=0.2, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_other, y_other, test_size=0.5, random_state=42)
 
-    # print(len(datasets))
-    print(dataset.head())
+    X_test_dist, y_test_dist = data_split(X_test, y_test)
+
+    # Train the decision tree model
+    model = DecisionTreeRegressor(random_state=42)
+    model.fit(X_train, y_train)
 
     mae_list = []
     mse_list = []
     distance_type = ["Short Distance", "Medium Distance", "Long Distance", "Overall"]
 
-
-
-    # Split the windowed data into train, validation, and test sets (80-10-10 split)
-    # Split data into training and other data first
-    X_train, X_other, y_train, y_other = train_test_split(dataset, labels, test_size=0.2, random_state=42)  # 80% training, 20% other
-
-    # Split the other data into validation and test sets
-    X_val, X_test, y_val, y_test = train_test_split(X_other, y_other, test_size=0.5, random_state=42)  # Splits other into 50% validation, 50% test
-
-    X_test_dist, y_test_dist = data_split(X_test, y_test)
-
-    # Model Preparation
-
-    # Reshape X_train and X_val to add the timestep dimension
-    X_train_reshaped = np.expand_dims(X_train, axis=1)
-    X_val_reshaped = np.expand_dims(X_val, axis=1)
-    X_test_reshaped = np.expand_dims(X_test, axis=1)
-
-    # Print the shapes to verify
-    print("X_train shape after reshaping:", X_train_reshaped.shape)
-    print("X_val shape after reshaping:", X_val_reshaped.shape)
-    print("X_test shape after reshaping:", X_test_reshaped.shape)
-
-    input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
-
-    # Train the model
-    model = Bi_LSTM_model(input_shape)
-    train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=1000)
-
-
+    # Evaluate the model for each distance type
     for i in range(len(X_test_dist)):
         X_test = X_test_dist[i]
         y_test = y_test_dist[i]
-        X_test_reshaped = np.expand_dims(X_test, axis=1)
 
         # Evaluate the model
         print(distance_type[i])
-        mae, mse = evaluate_model(model, X_test_reshaped, y_test)
+        mae, mse = evaluate_model(model, X_test, y_test)
 
         mae_list.append(mae)
         mse_list.append(mse)
 
+    # Print evaluation results
     print("\n\nEvaluation results")
-    for i in range(len(distance_type)): #for short, medium, long
+    for i in range(len(distance_type)):
         print(f"Window {i+1} {distance_type[i]}: \tMAE: {mae_list[i]:.2f} \tMSE: {mse_list[i]:.2f}")
-
 
 if __name__ == '__main__':
     main()
-

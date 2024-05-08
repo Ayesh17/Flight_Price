@@ -11,7 +11,7 @@ import random
 import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from LSTM_model import LSTM_model
-from Bidirectional_LSTM_model import Bi_LSTM_model
+from Bidirectional_LSTM_model_2 import Bi_LSTM_model
 from GRU_model import GRU_model
 from Bidirectional_GRU_model import Bidirectional_GRU_model
 from sklearn.model_selection import train_test_split
