@@ -43,7 +43,7 @@ def load_dataset(data_dir):
     combined_df = combined_df.sort_values(by=['Travel Day of Year', 'Travel Hour'])
 
     # Define the window size in terms of months
-    window_size_months = 5
+    window_size_months = 8
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()

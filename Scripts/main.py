@@ -50,7 +50,7 @@ def load_dataset(data_dir):
     # combined_df.to_csv('combined_data.csv', index=False)
 
     # Define the window size in terms of months
-    window_size_months = 5
+    window_size_months = 8
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()
@@ -288,7 +288,7 @@ def main():
         input_shape = (len(X_train), X_train.shape[1],)
 
         # Train the model
-        model = Bi_LSTM_model(input_shape)
+        model = LSTM_model(input_shape)
         train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
 
@@ -316,4 +316,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
