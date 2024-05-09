@@ -2,8 +2,10 @@ import os
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-input_folder = os.path.join(os.getcwd(), '../..', 'extracted_data')
-output_folder = os.path.join(os.getcwd(), '../..', 'preprocessed_data')
+input_folder = os.path.join(os.getcwd(), '..',  '..', 'extracted_data')
+
+print("input_folder", input_folder)
+output_folder = os.path.join(os.getcwd(), '..', '..', 'preprocessed_data')
 
 # Ensure the output folder exists
 os.makedirs(output_folder, exist_ok=True)
@@ -81,9 +83,6 @@ for file_name in os.listdir(input_folder):
         # df.drop(columns=['Airline(s)'], inplace=True)
         df.drop(columns=['CO2 Emission (kg)'], inplace=True)
         df.drop(columns=['Emission Diff (%)'], inplace=True)
-
-        # # Drop rows where number of stops is not equal to 0
-        # df = df[df['Num Stops'] == 0]
 
         print("df", df.head())
 

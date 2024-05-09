@@ -231,7 +231,7 @@ def main():
         input_shape = (len(X_train), X_train.shape[1],)  # Shape of input data for LSTM model
 
         # Train the model
-        model = LSTM_model(input_shape)
+        model = Bidirectional_LSTM_model(input_shape)
         train_model(model, X_train_reshaped, y_train, X_val_reshaped, y_val, epochs=100)
 
         for i in range(len(X_test_dist)):
