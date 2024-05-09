@@ -6,7 +6,7 @@ import pandas as pd
 from Flight_Price.src.google_flight_analysis.scrape import *
 
 # Ensure the 'extracted_data' folder exists
-output_folder = os.path.join(os.getcwd(), "..", "extracted_data")
+output_folder = os.path.join(os.getcwd(), "../..", "extracted_data")
 os.makedirs(output_folder, exist_ok=True)
 
 #Airport codes

@@ -4,8 +4,12 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-from Scripts.Small_Sequence_Models.LSTM_Model_2 import LSTM_model
-from Bidirectional_GRU_model import Bidirectional_GRU_model
+from Scripts.Small_Sequence_Models.RNN_model import RNN_model
+from Scripts.Small_Sequence_Models.Bidirectional_RNN_model import Bidirectional_RNN_model
+from Scripts.Small_Sequence_Models.GRU_model import GRU_model
+from Scripts.Small_Sequence_Models.Bidirectional_GRU_model import Bidirectional_GRU_model
+from Scripts.Small_Sequence_Models.LSTM_model import LSTM_model
+from Scripts.Small_Sequence_Models.Bidirectional_LSTM_model import Bidirectional_LSTM_model
 
 def load_data(directory_path):
     csv_files = [f for f in os.listdir(directory_path) if f.endswith('.csv')]
@@ -83,9 +87,8 @@ def plot_loss(history_original, history_bidirectional):
 def main():
     current_directory = os.getcwd()
     base_directory = os.path.dirname(current_directory)
-    input_folder = os.path.join(base_directory, 'extracted_data')
-    preprocessed_folder = os.path.join(base_directory, 'preprocessed_data')
-    output_folder = os.path.join(base_directory, 'combined_data')
+    preprocessed_folder = os.path.join(base_directory, '../preprocessed_data')
+    output_folder = os.path.join(base_directory, '../combined_data')
     os.makedirs(output_folder, exist_ok=True)
     output_file_path = os.path.join(output_folder, 'combined_flight_data.csv')
 
@@ -110,7 +113,7 @@ def main():
 
     # Define the model
     model_original = LSTM_model(input_shape)
-    model_bidirectional = Bidirectional_GRU_model(input_shape)
+    model_bidirectional = Bidirectional_LSTM_model(input_shape)
 
     # train models
     history_original = train_model(model_original, X_train, y_train, X_val, y_val, epochs=10, batch_size=32)

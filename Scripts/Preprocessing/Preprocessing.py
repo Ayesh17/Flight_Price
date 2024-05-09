@@ -2,8 +2,8 @@ import os
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-input_folder = os.path.join(os.getcwd(), '..', 'extracted_data')
-output_folder = os.path.join(os.getcwd(), '..', 'preprocessed_data')
+input_folder = os.path.join(os.getcwd(), '../..', 'extracted_data')
+output_folder = os.path.join(os.getcwd(), '../..', 'preprocessed_data')
 
 # Ensure the output folder exists
 os.makedirs(output_folder, exist_ok=True)

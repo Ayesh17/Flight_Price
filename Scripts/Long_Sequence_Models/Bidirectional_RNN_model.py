@@ -2,7 +2,7 @@ from keras.models import Sequential
 from keras.layers import Bidirectional, SimpleRNN, Dense, Dropout, Input
 
 
-def bi_rnn_model(input_shape):
+def Bidirectional_RNN_model(input_shape):
     model = Sequential()
     model.add(Input(shape=input_shape))
     model.add(Bidirectional(SimpleRNN(128, return_sequences=True)))

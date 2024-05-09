@@ -1,7 +1,7 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Input, LSTM, Dropout, Dense, Bidirectional
 
-def Bi_LSTM_model(input_shape):
+def Bidirectional_LSTM_model(input_shape):
     model = Sequential()
     model.add(Input(shape=input_shape))
     model.add(Bidirectional(LSTM(128, return_sequences=True)))
