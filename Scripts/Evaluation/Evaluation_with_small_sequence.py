@@ -56,7 +56,9 @@ def evaluate_model(model, X_test, y_test):
     print(f"loss: {loss :.2f} \t  Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
     return loss, mae, mse
 
-def plot_loss(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_Bi_LSTM):
+import matplotlib.pyplot as plt
+
+def plot_graphs(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_Bi_LSTM):
     plt.figure(figsize=(15, 15))
 
     # Plot training and validation loss
@@ -109,9 +111,6 @@ def plot_loss(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_
     plt.ylabel('MAE')
     plt.legend()
 
-    plt.tight_layout()
-    plt.show()
-
     # Plot loss
     plt.subplot(3, 2, 5)
     plt.plot(history_RNN.history['loss'], label='RNN Train Loss')
@@ -152,6 +151,7 @@ def plot_loss(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_
 
     plt.tight_layout()
     plt.show()
+
 
 
 def main():
@@ -219,7 +219,7 @@ def main():
 
 
     # plot graphs
-    plot_loss(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_bi_LSTM)
+    plot_graphs(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_bi_LSTM)
 
 if __name__ == "__main__":
     main()
