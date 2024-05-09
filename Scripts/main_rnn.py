@@ -2,8 +2,8 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from RNN_model import rnn_model
-from Bi_RNN_model import bi_rnn_model
+from Small_Sequence_Models import Bidirectional_RNN_model
+from Small_Sequence_Models import RNN_model
 import tensorflow as tf
 import matplotlib
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -169,10 +169,10 @@ def main(use_bidirectional=True):
         model_type = ''
         # Choose the model based on the use_bidirectional flag
         if use_bidirectional:
-            model = bi_rnn_model((X_train_reshaped.shape[1], X_train_reshaped.shape[2]))
+            model = Bidirectional_RNN_model((X_train_reshaped.shape[1], X_train_reshaped.shape[2]))
             model_type = 'Bi-RNN'
         else:
-            model = rnn_model((X_train_reshaped.shape[1], X_train_reshaped.shape[2]))
+            model = RNN_model((X_train_reshaped.shape[1], X_train_reshaped.shape[2]))
             model_type = 'RNN'
 
         # Train the model
