@@ -125,7 +125,7 @@ def evaluate_model(model, X_test, y_test):
     return mae, mse
 
 
-def main(use_bidirectional=False):
+def main(use_bidirectional=True):
     # Load the dataset
     data_dir = '../preprocessed_data'
     datasets, labels = load_dataset(data_dir)
@@ -201,4 +201,4 @@ def main(use_bidirectional=False):
 
 if __name__ == '__main__':
     # Change to 'False' to use RNN or 'True' to use Bi-RNN
-    main(use_bidirectional=False)
+    main(use_bidirectional=True)
