@@ -56,26 +56,95 @@ def evaluate_model(model, X_test, y_test):
     print(f"loss: {loss :.2f} \t  Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
     return loss, mae, mse
 
-def plot_loss(history_original, history_bidirectional):
-    plt.figure(figsize=(15, 5))
+def plot_loss(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_Bi_LSTM):
+    plt.figure(figsize=(15, 15))
+
+    # Plot training and validation loss
+    plt.subplot(3, 2, 1)
+    plt.plot(history_RNN.history['loss'], label='RNN Train Loss')
+    plt.plot(history_Bi_RNN.history['loss'], label='Bidirectional RNN Train Loss')
+    plt.plot(history_GRU.history['loss'], label='GRU Train Loss')
+    plt.plot(history_Bi_GRU.history['loss'], label='Bidirectional GRU Train Loss')
+    plt.plot(history_LSTM.history['loss'], label='LSTM Train Loss')
+    plt.plot(history_Bi_LSTM.history['loss'], label='Bidirectional LSTM Train Loss')
+    plt.title('Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.subplot(3, 2, 2)
+    plt.plot(history_RNN.history['val_loss'], label='RNN Validation Loss')
+    plt.plot(history_Bi_RNN.history['val_loss'], label='Bidirectional RNN Validation Loss')
+    plt.plot(history_GRU.history['val_loss'], label='GRU Validation Loss')
+    plt.plot(history_Bi_GRU.history['val_loss'], label='Bidirectional GRU Validation Loss')
+    plt.plot(history_LSTM.history['val_loss'], label='LSTM Validation Loss')
+    plt.plot(history_Bi_LSTM.history['val_loss'], label='Bidirectional LSTM Validation Loss')
+    plt.title('Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    # Plot training and validation MAE
+    plt.subplot(3, 2, 3)
+    plt.plot(history_RNN.history['mae'], label='RNN Train MAE')
+    plt.plot(history_Bi_RNN.history['mae'], label='Bidirectional RNN Train MAE')
+    plt.plot(history_GRU.history['mae'], label='GRU Train MAE')
+    plt.plot(history_Bi_GRU.history['mae'], label='Bidirectional GRU Train MAE')
+    plt.plot(history_LSTM.history['mae'], label='LSTM Train MAE')
+    plt.plot(history_Bi_LSTM.history['mae'], label='Bidirectional LSTM Train MAE')
+    plt.title('Training MAE')
+    plt.xlabel('Epoch')
+    plt.ylabel('MAE')
+    plt.legend()
+
+    plt.subplot(3, 2, 4)
+    plt.plot(history_RNN.history['val_mae'], label='RNN Validation MAE')
+    plt.plot(history_Bi_RNN.history['val_mae'], label='Bidirectional RNN Validation MAE')
+    plt.plot(history_GRU.history['val_mae'], label='GRU Validation MAE')
+    plt.plot(history_Bi_GRU.history['val_mae'], label='Bidirectional GRU Validation MAE')
+    plt.plot(history_LSTM.history['val_mae'], label='LSTM Validation MAE')
+    plt.plot(history_Bi_LSTM.history['val_mae'], label='Bidirectional LSTM Validation MAE')
+    plt.title('Validation MAE')
+    plt.xlabel('Epoch')
+    plt.ylabel('MAE')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
 
     # Plot loss
-    plt.subplot(1, 2, 1)
-    plt.plot(history_original.history['loss'], label='Original Model Train Loss')
-    plt.plot(history_original.history['val_loss'], label='Original Model Validation Loss')
-    plt.plot(history_bidirectional.history['loss'], label='Bidirectional Model Train Loss')
-    plt.plot(history_bidirectional.history['val_loss'], label='Bidirectional Model Validation Loss')
+    plt.subplot(3, 2, 5)
+    plt.plot(history_RNN.history['loss'], label='RNN Train Loss')
+    plt.plot(history_RNN.history['val_loss'], label='RNN Validation Loss')
+    plt.plot(history_Bi_RNN.history['loss'], label='Bidirectional RNN Train Loss')
+    plt.plot(history_Bi_RNN.history['val_loss'], label='Bidirectional RNN Validation Loss')
+    plt.plot(history_GRU.history['loss'], label='GRU Train Loss')
+    plt.plot(history_GRU.history['val_loss'], label='GRU Validation Loss')
+    plt.plot(history_Bi_GRU.history['loss'], label='Bidirectional GRU Train Loss')
+    plt.plot(history_Bi_GRU.history['val_loss'], label='Bidirectional GRU Validation Loss')
+    plt.plot(history_LSTM.history['loss'], label='LSTM Train Loss')
+    plt.plot(history_LSTM.history['val_loss'], label='LSTM Validation Loss')
+    plt.plot(history_Bi_LSTM.history['loss'], label='Bidirectional LSTM Train Loss')
+    plt.plot(history_Bi_LSTM.history['val_loss'], label='Bidirectional LSTM Validation Loss')
     plt.title('Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
 
     # Plot MAE
-    plt.subplot(1, 2, 2)
-    plt.plot(history_original.history['mae'], label='Original Model Train MAE')
-    plt.plot(history_original.history['val_mae'], label='Original Model Validation MAE')
-    plt.plot(history_bidirectional.history['mae'], label='Bidirectional Model Train MAE')
-    plt.plot(history_bidirectional.history['val_mae'], label='Bidirectional Model Validation MAE')
+    plt.subplot(3, 2, 6)
+    plt.plot(history_RNN.history['mae'], label='RNN Train MAE')
+    plt.plot(history_RNN.history['val_mae'], label='RNN Validation MAE')
+    plt.plot(history_Bi_RNN.history['mae'], label='Bidirectional RNN Train MAE')
+    plt.plot(history_Bi_RNN.history['val_mae'], label='Bidirectional RNN Validation MAE')
+    plt.plot(history_GRU.history['mae'], label='GRU Train MAE')
+    plt.plot(history_GRU.history['val_mae'], label='GRU Validation MAE')
+    plt.plot(history_Bi_GRU.history['mae'], label='Bidirectional GRU Train MAE')
+    plt.plot(history_Bi_GRU.history['val_mae'], label='Bidirectional GRU Validation MAE')
+    plt.plot(history_LSTM.history['mae'], label='LSTM Train MAE')
+    plt.plot(history_LSTM.history['val_mae'], label='LSTM Validation MAE')
+    plt.plot(history_Bi_LSTM.history['mae'], label='Bidirectional LSTM Train MAE')
+    plt.plot(history_Bi_LSTM.history['val_mae'], label='Bidirectional LSTM Validation MAE')
     plt.title('Mean Absolute Error (MAE)')
     plt.xlabel('Epoch')
     plt.ylabel('MAE')
@@ -83,6 +152,7 @@ def plot_loss(history_original, history_bidirectional):
 
     plt.tight_layout()
     plt.show()
+
 
 def main():
     current_directory = os.getcwd()
@@ -112,23 +182,44 @@ def main():
     input_shape = (X_train.shape[1], X_train.shape[2])
 
     # Define the model
-    model_original = LSTM_model(input_shape)
-    model_bidirectional = Bidirectional_LSTM_model(input_shape)
+    Uni_RNN_model = RNN_model(input_shape)
+    Bi_RNN_model = Bidirectional_RNN_model(input_shape)
+    Uni_GRU_model = GRU_model(input_shape)
+    Bi_GRU_model = Bidirectional_GRU_model(input_shape)
+    Uni_LSTM_model = LSTM_model(input_shape)
+    Bi_LSTM_model = Bidirectional_LSTM_model(input_shape)
 
     # train models
-    history_original = train_model(model_original, X_train, y_train, X_val, y_val, epochs=10, batch_size=32)
-    history_bidirectional = train_model(model_bidirectional, X_train, y_train, X_val, y_val, epochs=10, batch_size=32)
+    history_RNN = train_model(Uni_RNN_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
+    history_Bi_RNN = train_model(Bi_RNN_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
+    history_GRU = train_model(Uni_GRU_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
+    history_Bi_GRU = train_model(Bi_GRU_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
+    history_LSTM = train_model(Uni_LSTM_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
+    history_bi_LSTM = train_model(Bi_LSTM_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
 
 
-    # evaluate
-    loss_original, mae_original, mse_original  = evaluate_model(model_original, X_test, y_test)
-    loss_bidirectional, mae_bidirectional, mse_bidirectional = evaluate_model(model_bidirectional, X_test, y_test)
-    print("Original Model - Loss:", loss_original, "MAE:", mae_original, "MSE:", mse_original)
-    print("Bidirectional Model - Loss:", loss_bidirectional, "MAE:", mae_bidirectional, "MSE:", mse_bidirectional)
+    # evaluation
+    loss_RNN, mae_RNN, mse_RNN = evaluate_model(Uni_RNN_model, X_test, y_test)
+    loss_Bi_RNN, mae_Bi_RNN, mse_Bi_RNN = evaluate_model(Bi_RNN_model, X_test, y_test)
+
+    loss_GRU, mae_GRU, mse_GRU = evaluate_model(Uni_GRU_model, X_test, y_test)
+    loss_Bi_GRU, mae_Bi_GRU, mse_Bi_GRU = evaluate_model(Bi_GRU_model, X_test, y_test)
+
+    loss_LSTM, mae_LSTM, mse_LSTM = evaluate_model(Uni_LSTM_model, X_test, y_test)
+    loss_Bi_LSTM, mae_Bi_LSTM, mse_Bi_LSTM = evaluate_model(Bi_LSTM_model, X_test, y_test)
+
+    print("RNN Model - Loss:", loss_RNN, "MAE:", mae_RNN, "MSE:", mse_RNN)
+    print("Bidirectional RNN Model - Loss:", loss_Bi_RNN, "MAE:", mae_Bi_RNN, "MSE:", mse_Bi_RNN)
+
+    print("GRU Model - Loss:", loss_GRU, "MAE:", mae_GRU, "MSE:", mse_GRU)
+    print("Bidirectional GRU Model - Loss:", loss_Bi_GRU, "MAE:", mae_Bi_GRU, "MSE:", mse_Bi_GRU)
+
+    print("LSTM Model - Loss:", loss_LSTM, "MAE:", mae_LSTM, "MSE:", mse_LSTM)
+    print("Bidirectional LSTM Model - Loss:", loss_Bi_LSTM, "MAE:", mae_Bi_LSTM, "MSE:", mse_Bi_LSTM)
 
 
     # plot graphs
-    plot_loss(history_original, history_bidirectional)
+    plot_loss(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_bi_LSTM)
 
 if __name__ == "__main__":
     main()

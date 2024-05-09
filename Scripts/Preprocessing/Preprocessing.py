@@ -78,7 +78,7 @@ for file_name in os.listdir(input_folder):
         df.drop(columns=['Access Date'], inplace=True)
         df.drop(columns=['Travel Time'], inplace=True)
         df.drop(columns=['Layover'], inplace=True)
-        df.drop(columns=['Airline(s)'], inplace=True)
+        # df.drop(columns=['Airline(s)'], inplace=True)
         df.drop(columns=['CO2 Emission (kg)'], inplace=True)
         df.drop(columns=['Emission Diff (%)'], inplace=True)
 
