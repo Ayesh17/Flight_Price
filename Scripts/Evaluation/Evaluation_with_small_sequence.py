@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+from keras.src.optimizers import Adam
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -21,11 +22,12 @@ def load_data(directory_path):
     df = pd.concat(df_list, ignore_index=True)
     return df
 
+
 def create_sequences(data, target_column_index, n_steps):
     X, y = [], []
     for i in range(len(data) - n_steps):
         # Extract input features (excluding the target column)
-        seq_x = data[i:i+n_steps, :target_column_index]
+        seq_x = np.delete(data[i:i+n_steps, :], target_column_index, axis=1)
         # Extract the target column
         seq_y = data[i+n_steps, target_column_index]
         X.append(seq_x)
@@ -61,10 +63,8 @@ def evaluate_model(model, X_test, y_test):
     print(f"loss: {loss :.2f} \t  Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
     return loss, mae, mse
 
-import matplotlib.pyplot as plt
-
 def plot_graphs(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_Bi_LSTM):
-    plt.figure(figsize=(15, 15))
+    plt.figure(figsize=(20, 15))
 
     # Plot training and validation loss
     plt.subplot(3, 2, 1)
@@ -176,56 +176,73 @@ def main():
     df.to_csv(output_file_path, index=False)
     print(f"Data saved to {output_file_path}")
 
+    # print("df", df.head())
+
 
     # prepare datset for the deep learning models
-    X, y = prepare_data(df, n_steps=100)
+    X, y = prepare_data(df, n_steps=20)
+
+    # print("X", X[0])
 
     # spit the dataset
     X_train, X_other, y_train, y_other = train_test_split(X, y, test_size=0.2, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_other, y_other, test_size=0.5, random_state=42)
 
 
+
     input_shape = (X_train.shape[1], X_train.shape[2])
 
     # Define the model
     Uni_RNN_model = RNN_model(input_shape)
+    Uni_RNN_model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mae'])
+
     Bi_RNN_model = Bidirectional_RNN_model(input_shape)
+    Bi_RNN_model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mae'])
+
     Uni_GRU_model = GRU_model(input_shape)
+    Uni_GRU_model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mae'])
+
     Bi_GRU_model = Bidirectional_GRU_model(input_shape)
+    Bi_GRU_model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mae'])
+
     Uni_LSTM_model = LSTM_model(input_shape)
+    Uni_LSTM_model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mae'])
+
     Bi_LSTM_model = Bidirectional_LSTM_model(input_shape)
+    Bi_LSTM_model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mae'])
+
 
     # train models
-    # history_RNN = train_model(Uni_RNN_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
-    # history_Bi_RNN = train_model(Bi_RNN_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
-    history_GRU = train_model(Uni_GRU_model, X_train, y_train, X_val, y_val, epochs=15, batch_size=32)
-    # history_Bi_GRU = train_model(Bi_GRU_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
-    # history_LSTM = train_model(Uni_LSTM_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
-    # history_bi_LSTM = train_model(Bi_LSTM_model, X_train, y_train, X_val, y_val, epochs=2, batch_size=32)
+    history_RNN = train_model(Uni_RNN_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
+    history_Bi_RNN = train_model(Bi_RNN_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
+    history_GRU = train_model(Uni_GRU_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
+    history_Bi_GRU = train_model(Bi_GRU_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
+    history_LSTM = train_model(Uni_LSTM_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
+    history_bi_LSTM = train_model(Bi_LSTM_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
 
 
-    # # evaluation
-    # loss_RNN, mae_RNN, mse_RNN = evaluate_model(Uni_RNN_model, X_test, y_test)
-    # loss_Bi_RNN, mae_Bi_RNN, mse_Bi_RNN = evaluate_model(Bi_RNN_model, X_test, y_test)
+    # evaluation
+    loss_RNN, mae_RNN, mse_RNN = evaluate_model(Uni_RNN_model, X_test, y_test)
+    loss_Bi_RNN, mae_Bi_RNN, mse_Bi_RNN = evaluate_model(Bi_RNN_model, X_test, y_test)
 
     loss_GRU, mae_GRU, mse_GRU = evaluate_model(Uni_GRU_model, X_test, y_test)
-    # loss_Bi_GRU, mae_Bi_GRU, mse_Bi_GRU = evaluate_model(Bi_GRU_model, X_test, y_test)
-    #
-    # loss_LSTM, mae_LSTM, mse_LSTM = evaluate_model(Uni_LSTM_model, X_test, y_test)
-    # loss_Bi_LSTM, mae_Bi_LSTM, mse_Bi_LSTM = evaluate_model(Bi_LSTM_model, X_test, y_test)
+    loss_Bi_GRU, mae_Bi_GRU, mse_Bi_GRU = evaluate_model(Bi_GRU_model, X_test, y_test)
 
-    # print("RNN Model - Loss:", loss_RNN, "MAE:", mae_RNN, "MSE:", mse_RNN)
-    # print("Bidirectional RNN Model - Loss:", loss_Bi_RNN, "MAE:", mae_Bi_RNN, "MSE:", mse_Bi_RNN)
+    loss_LSTM, mae_LSTM, mse_LSTM = evaluate_model(Uni_LSTM_model, X_test, y_test)
+    loss_Bi_LSTM, mae_Bi_LSTM, mse_Bi_LSTM = evaluate_model(Bi_LSTM_model, X_test, y_test)
+
+    print("RNN Model - Loss:", loss_RNN, "MAE:", mae_RNN, "MSE:", mse_RNN)
+    print("Bidirectional RNN Model - Loss:", loss_Bi_RNN, "MAE:", mae_Bi_RNN, "MSE:", mse_Bi_RNN)
 
     print("GRU Model - Loss:", loss_GRU, "MAE:", mae_GRU, "MSE:", mse_GRU)
-    # print("Bidirectional GRU Model - Loss:", loss_Bi_GRU, "MAE:", mae_Bi_GRU, "MSE:", mse_Bi_GRU)
-    #
-    # print("LSTM Model - Loss:", loss_LSTM, "MAE:", mae_LSTM, "MSE:", mse_LSTM)
-    # print("Bidirectional LSTM Model - Loss:", loss_Bi_LSTM, "MAE:", mae_Bi_LSTM, "MSE:", mse_Bi_LSTM)
+    print("Bidirectional GRU Model - Loss:", loss_Bi_GRU, "MAE:", mae_Bi_GRU, "MSE:", mse_Bi_GRU)
+
+    print("LSTM Model - Loss:", loss_LSTM, "MAE:", mae_LSTM, "MSE:", mse_LSTM)
+    print("Bidirectional LSTM Model - Loss:", loss_Bi_LSTM, "MAE:", mae_Bi_LSTM, "MSE:", mse_Bi_LSTM)
 
 
     # plot graphs
-    # plot_graphs(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_bi_LSTM)
+    plot_graphs(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_bi_LSTM)
 
 if __name__ == "__main__":
     main()

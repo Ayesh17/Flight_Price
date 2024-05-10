@@ -43,8 +43,11 @@ def load_dataset(data_dir):
     # Sort the DataFrame by 'Travel Day of Year' and 'Travel Hour'
     combined_df = combined_df.sort_values(by=['Travel Day of Year', 'Travel Hour'])
 
+    # Save as a CSV
+    # combined_df.to_csv('combined_data.csv', index=False)
+
     # Define the window size in terms of months
-    window_size_months = 8
+    window_size_months = 6
 
     # Get the minimum and maximum flight months
     min_flight_month = combined_df['Travel Month'].min()
@@ -221,6 +224,8 @@ def main():
         y_test = label[train_size + val_size:]
 
         X_test_dist, y_test_dist = data_split(X_test, y_test)
+
+        print("X_train", X_train)
 
         # Model Preparation
 
