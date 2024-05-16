@@ -11,6 +11,8 @@ from Scripts.Small_Sequence_Models.GRU_model import GRU_model
 from Scripts.Small_Sequence_Models.Bidirectional_GRU_model import Bidirectional_GRU_model
 from Scripts.Small_Sequence_Models.LSTM_model import LSTM_model
 from Scripts.Small_Sequence_Models.Bidirectional_LSTM_model import Bidirectional_LSTM_model
+from sklearn.metrics import r2_score
+
 
 def load_data(directory_path):
     csv_files = [f for f in os.listdir(directory_path) if f.endswith('.csv')]
@@ -59,9 +61,12 @@ def evaluate_model(model, X_test, y_test):
 
     mae = mean_absolute_error(y_test, y_pred)
     mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
 
-    print(f"loss: {loss :.2f} \t  Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f}")
-    return loss, mae, mse
+    print(f"loss: {loss :.2f} \t  Mean Absolute Error (MAE): {mae :.2f} \tMean Squared Error (MSE): {mse:.2f} \tR-squared (R2): {r2:.2f}")
+    return loss, mae, mse, r2
+
+
 
 def plot_graphs(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_Bi_LSTM):
     plt.figure(figsize=(20, 15))
@@ -213,33 +218,30 @@ def main():
 
 
     # train models
-    history_RNN = train_model(Uni_RNN_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
-    history_Bi_RNN = train_model(Bi_RNN_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
-    history_GRU = train_model(Uni_GRU_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
-    history_Bi_GRU = train_model(Bi_GRU_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
-    history_LSTM = train_model(Uni_LSTM_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
+    history_RNN = train_model(Uni_RNN_model, X_train, y_train, X_val, y_val, epochs=1, batch_size=32)
+    history_Bi_RNN = train_model(Bi_RNN_model, X_train, y_train, X_val, y_val, epochs=1, batch_size=32)
+    history_GRU = train_model(Uni_GRU_model, X_train, y_train, X_val, y_val, epochs=1, batch_size=32)
+    history_Bi_GRU = train_model(Bi_GRU_model, X_train, y_train, X_val, y_val, epochs=1, batch_size=32)
+    history_LSTM = train_model(Uni_LSTM_model, X_train, y_train, X_val, y_val, epochs=1, batch_size=32)
     history_bi_LSTM = train_model(Bi_LSTM_model, X_train, y_train, X_val, y_val, epochs=100, batch_size=32)
 
 
     # evaluation
-    loss_RNN, mae_RNN, mse_RNN = evaluate_model(Uni_RNN_model, X_test, y_test)
-    loss_Bi_RNN, mae_Bi_RNN, mse_Bi_RNN = evaluate_model(Bi_RNN_model, X_test, y_test)
+    # evaluation
+    loss_RNN, mae_RNN, mse_RNN, r2_RNN = evaluate_model(Uni_RNN_model, X_test, y_test)
+    loss_Bi_RNN, mae_Bi_RNN, mse_Bi_RNN, r2_Bi_RNN = evaluate_model(Bi_RNN_model, X_test, y_test)
+    loss_GRU, mae_GRU, mse_GRU, r2_GRU = evaluate_model(Uni_GRU_model, X_test, y_test)
+    loss_Bi_GRU, mae_Bi_GRU, mse_Bi_GRU, r2_Bi_GRU = evaluate_model(Bi_GRU_model, X_test, y_test)
+    loss_LSTM, mae_LSTM, mse_LSTM, r2_LSTM = evaluate_model(Uni_LSTM_model, X_test, y_test)
+    loss_Bi_LSTM, mae_Bi_LSTM, mse_Bi_LSTM, r2_Bi_LSTM = evaluate_model(Bi_LSTM_model, X_test, y_test)
 
-    loss_GRU, mae_GRU, mse_GRU = evaluate_model(Uni_GRU_model, X_test, y_test)
-    loss_Bi_GRU, mae_Bi_GRU, mse_Bi_GRU = evaluate_model(Bi_GRU_model, X_test, y_test)
-
-    loss_LSTM, mae_LSTM, mse_LSTM = evaluate_model(Uni_LSTM_model, X_test, y_test)
-    loss_Bi_LSTM, mae_Bi_LSTM, mse_Bi_LSTM = evaluate_model(Bi_LSTM_model, X_test, y_test)
-
-    print("RNN Model - Loss:", loss_RNN, "MAE:", mae_RNN, "MSE:", mse_RNN)
-    print("Bidirectional RNN Model - Loss:", loss_Bi_RNN, "MAE:", mae_Bi_RNN, "MSE:", mse_Bi_RNN)
-
-    print("GRU Model - Loss:", loss_GRU, "MAE:", mae_GRU, "MSE:", mse_GRU)
-    print("Bidirectional GRU Model - Loss:", loss_Bi_GRU, "MAE:", mae_Bi_GRU, "MSE:", mse_Bi_GRU)
-
-    print("LSTM Model - Loss:", loss_LSTM, "MAE:", mae_LSTM, "MSE:", mse_LSTM)
-    print("Bidirectional LSTM Model - Loss:", loss_Bi_LSTM, "MAE:", mae_Bi_LSTM, "MSE:", mse_Bi_LSTM)
-
+    # Print evaluations including R2
+    print("RNN Model - Loss:", loss_RNN, "MAE:", mae_RNN, "MSE:", mse_RNN, "R2:", r2_RNN)
+    print("Bidirectional RNN Model - Loss:", loss_Bi_RNN, "MAE:", mae_Bi_RNN, "MSE:", mse_Bi_RNN, "R2:", r2_Bi_RNN)
+    print("GRU Model - Loss:", loss_GRU, "MAE:", mae_GRU, "MSE:", mse_GRU, "R2:", r2_GRU)
+    print("Bidirectional GRU Model - Loss:", loss_Bi_GRU, "MAE:", mae_Bi_GRU, "MSE:", mse_Bi_GRU, "R2:", r2_Bi_GRU)
+    print("LSTM Model - Loss:", loss_LSTM, "MAE:", mae_LSTM, "MSE:", mse_LSTM, "R2:", r2_LSTM)
+    print("Bidirectional LSTM Model - Loss:", loss_Bi_LSTM, "MAE:", mae_Bi_LSTM, "MSE:", mse_Bi_LSTM, "R2:", r2_Bi_LSTM)
 
     # plot graphs
     plot_graphs(history_RNN, history_Bi_RNN, history_GRU, history_Bi_GRU, history_LSTM, history_bi_LSTM)
